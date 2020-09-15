@@ -19,7 +19,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
@@ -39,7 +39,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-function _createForOfIteratorHelper(o) { if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (o = _unsupportedIterableToArray(o))) { var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var it, normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -51,7 +51,7 @@ function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableTo
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(n); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
 function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
 
@@ -504,15 +504,15 @@ var DEFAULT_STORAGE_OPTIONS = {
   removeChildrenOnUnload: true,
   clearStorageOnUnload: true,
   privateStatePaths: []
-}; // ========================== MULTISTATE CLASS ==========================
+}; // ========================== CANTUS_FIRMUS CLASS ==========================
 
-var Multistate = /*#__PURE__*/function () {
-  function Multistate(state) {
+var CantusFirmus = /*#__PURE__*/function () {
+  function CantusFirmus(state) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    _classCallCheck(this, Multistate);
+    _classCallCheck(this, CantusFirmus);
 
-    this.context = (0, _react.createContext)(null);
+    this.context = /*#__PURE__*/(0, _react.createContext)(null);
     this.state = state;
     this.setters = {};
     this.getters = {};
@@ -520,7 +520,7 @@ var Multistate = /*#__PURE__*/function () {
     this.constants = {};
     this.methods = {}; // OPTIONS
 
-    this.options = _objectSpread({}, DEFAULT_OPTIONS, {}, options);
+    this.options = _objectSpread(_objectSpread({}, DEFAULT_OPTIONS), options);
     this.dynamicSetters = this.options.dynamicSetters;
     this.dynamicGetters = this.options.dynamicGetters;
     this.allowSetterOverwrite = this.options.allowSetterOverwrite;
@@ -533,7 +533,7 @@ var Multistate = /*#__PURE__*/function () {
     this.bindToLocalStorage = false;
   }
 
-  _createClass(Multistate, [{
+  _createClass(CantusFirmus, [{
     key: "addCustomSetters",
     value: function addCustomSetters(setters) {
       this.setters = setters;
@@ -561,7 +561,7 @@ var Multistate = /*#__PURE__*/function () {
   }, {
     key: "addConstants",
     value: function addConstants(newConstants) {
-      this.constants = _objectSpread({}, this.constants, {}, newConstants);
+      this.constants = _objectSpread(_objectSpread({}, this.constants), newConstants);
     }
   }, {
     key: "addMethods",
@@ -578,9 +578,9 @@ var Multistate = /*#__PURE__*/function () {
     value: function connectToLocalStorage() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       this.bindToLocalStorage = true;
-      this.storageOptions = _objectSpread({}, DEFAULT_STORAGE_OPTIONS, {}, options); // if no name is specified, throw an error, as this is a required field to manage multiple localStorage instances
+      this.storageOptions = _objectSpread(_objectSpread({}, DEFAULT_STORAGE_OPTIONS), options); // if no name is specified, throw an error, as this is a required field to manage multiple localStorage instances
 
-      if (!this.storageOptions.name) throw new Error("When connecting your multistate instance to the local storage, you must provide an unique name (string) to avoid conflicts with other local storage parameters."); // default the provider window name to the localStorage name if providerWindow param not given
+      if (!this.storageOptions.name) throw new Error("When connecting your cf instance to the local storage, you must provide an unique name (string) to avoid conflicts with other local storage parameters."); // default the provider window name to the localStorage name if providerWindow param not given
 
       this.storageOptions.providerWindow = this.storageOptions.providerWindow || this.storageOptions.name; // if user has specified to load state from local storage (this only impacts the provider window)
 
@@ -634,10 +634,10 @@ var Multistate = /*#__PURE__*/function () {
       // GETTER CREATION
 
 
-      getters = this.dynamicGetters ? _objectSpread({}, createStateGetters(state, ignoredGetters, this.nestedGetters), {}, this.getters) : _objectSpread({}, this.getters); // SETTER CREATION
+      getters = this.dynamicGetters ? _objectSpread(_objectSpread({}, createStateGetters(state, ignoredGetters, this.nestedGetters)), this.getters) : _objectSpread({}, this.getters); // SETTER CREATION
 
       if (this.allowSetterOverwrite) {
-        setters = this.dynamicSetters ? _objectSpread({}, createStateSetters(state, ignoredSetters, this.nestedSetters), {}, this.setters) : _objectSpread({}, this.setters);
+        setters = this.dynamicSetters ? _objectSpread(_objectSpread({}, createStateSetters(state, ignoredSetters, this.nestedSetters)), this.setters) : _objectSpread({}, this.setters);
       } else {
         var dynamicSetters = createStateSetters(state, ignoredSetters);
         var dynamicKeys = Object.keys(dynamicSetters);
@@ -647,10 +647,10 @@ var Multistate = /*#__PURE__*/function () {
 
           if (dynamicKeys.includes(key)) {
             if (this.developmentWarnings) {
-              this.overwriteProtectionLevel === 1 && console.warn("The user defined setter, '".concat(key, "', was blocked from overwriting a dynamically generated setter of the same name. To change this behavior, set allowSetterOverwrite to true in the multistate options."));
+              this.overwriteProtectionLevel === 1 && console.warn("The user defined setter, '".concat(key, "', was blocked from overwriting a dynamically generated setter of the same name. To change this behavior, set allowSetterOverwrite to true in the CantusFirmus options."));
 
               if (this.overwriteProtectionLevel >= 2) {
-                throw new Error("The user defined setter, '".concat(key, "', was blocked from overwriting a dynamically generated setter of the same name. To change this behavior, set allowSetterOverwrite to true in the multistate options."));
+                throw new Error("The user defined setter, '".concat(key, "', was blocked from overwriting a dynamically generated setter of the same name. To change this behavior, set allowSetterOverwrite to true in the CantusFirmus options."));
               }
             }
 
@@ -658,7 +658,7 @@ var Multistate = /*#__PURE__*/function () {
           }
         }
 
-        setters = this.dynamicSetters ? _objectSpread({}, createStateSetters(state, ignoredSetters, this.nestedSetters), {}, this.setters) : _objectSpread({}, this.setters);
+        setters = this.dynamicSetters ? _objectSpread(_objectSpread({}, createStateSetters(state, ignoredSetters, this.nestedSetters)), this.setters) : _objectSpread({}, this.setters);
       } // define Provider class component
 
 
@@ -675,7 +675,7 @@ var Multistate = /*#__PURE__*/function () {
           _this4 = _super.call(this, props);
           _this4.state = state;
           _this4.setters = bindMethods(setters, _assertThisInitialized(_this4));
-          _this4.getters = bindMethods(getters, _assertThisInitialized(_this4)); // set this.reducers to the reducers added in the multistate Class 
+          _this4.getters = bindMethods(getters, _assertThisInitialized(_this4)); // set this.reducers to the reducers added in the CantusFirmus Class 
 
           _this4.reducers = reducers; // bind generateDispatchers
 
@@ -748,10 +748,10 @@ var Multistate = /*#__PURE__*/function () {
           key: "updateStateFromLocalStorage",
           value: function updateStateFromLocalStorage() {
             try {
-              this.setState(_objectSpread({}, this.state, {}, JSON.parse(window.localStorage.getItem(storageOptions.name))));
+              this.setState(_objectSpread(_objectSpread({}, this.state), JSON.parse(window.localStorage.getItem(storageOptions.name))));
             } catch (err) {
               // bug check: is this still needed?
-              var updatedState = typeof localStorage[storageOptions.name] === "string" ? _objectSpread({}, this.state, {}, JSON.parse(localStorage[storageOptions.name])) : _objectSpread({}, this.state);
+              var updatedState = typeof localStorage[storageOptions.name] === "string" ? _objectSpread(_objectSpread({}, this.state), JSON.parse(localStorage[storageOptions.name])) : _objectSpread({}, this.state);
               this.setState(updatedState);
             }
           }
@@ -777,7 +777,7 @@ var Multistate = /*#__PURE__*/function () {
                 return this.windows;
               }
             }; // instruct the window what to do when it closes
-            // we define this here, and not up in the multistate class because we need access to all generated child windows
+            // we define this here, and not up in the CantusFirmus class because we need access to all generated child windows
 
             if (window.name === storageOptions.providerWindow || storageOptions.removeChildrenOnUnload) {
               var handleUnload = function handleUnload(e) {
@@ -871,10 +871,10 @@ var Multistate = /*#__PURE__*/function () {
     }
   }]);
 
-  return Multistate;
+  return CantusFirmus;
 }();
 
-var _default = Multistate; // ============================ Subscribe ============================
+var _default = CantusFirmus; // ============================ Subscribe ============================
 
 /* 
 contextDependencies = [
@@ -886,7 +886,7 @@ contextDependencies = [
 exports["default"] = _default;
 
 var subscribe = function subscribe(Component, contextDependencies) {
-  var MultistateSubscriber = function MultistateSubscriber(props) {
+  CantusFirmusSubscriber = function CantusFirmusSubscriber(props) {
     var contexts = {},
         dependencies = [],
         nestedDep = null; // apply default key value when only 1 context is subscribed to, and no key value given
@@ -935,7 +935,7 @@ var subscribe = function subscribe(Component, contextDependencies) {
     }, dependencies);
   };
 
-  return MultistateSubscriber;
+  return CantusFirmusSubscriber;
 };
 
 exports.subscribe = subscribe;
