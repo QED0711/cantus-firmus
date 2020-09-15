@@ -1,3 +1,16 @@
+## About:
+
+**Cantus Firmus** is a React state management package with a focus on simplicity, pattern familiarity, and the automation of repetitive and sometimes complex tasks. CF handles the mundane parts of state management, while also providing simple ways to accomplish typically challenging things.  
+
+At a glance, some of the main features of Cantus Firmus are:
+
+- Minimal boilerplate, and an included CLI to get complex state management setup quickly
+- Dynamically generated setter and getter functions to easily set and access global state
+- Configurable state persistence on page reloads
+- Multi-window state sharing and communication
+- Efficiency measures to prevent unnecessary re-renders on global state changes
+
+---
 ## Installation:
 
 ```
@@ -8,7 +21,9 @@ ___
 
 ### Initialization:
 
-The following example shows how to implement a no frills configuration of a CantusFirmus (CF) state manager context and provider.
+The following example shows how to implement a basic configuration of a CantusFirmus state manager context and provider.
+
+First, we create a CF instance, and pass it our default state.
 
 ```
     // myState.js
@@ -28,7 +43,7 @@ The following example shows how to implement a no frills configuration of a Cant
 
 ### Wrapping components with the state provider:
 
-Once you have created and exported your state context and provider, you can use them as you would any context/provider pair. 
+Once you have created and exported your state context and provider, you can use them as you would any context/provider pair. See [CantusFirmusSubscriber](#) for how to mitigate some of the efficiency issues inherent in the React context API. 
 
 First, wrap whichever children components you want to have access to the state context in your provider. This example wraps the entire component tree in the provider, giving all children access to the state. 
 
@@ -157,6 +172,12 @@ We'll now update our subscribing component to use our new custom setters.
 ```
 
 And with that we have a quick and easy way to implement our own setter logic.
+
+___
+
+## CantusFirmusSubscriber HOC
+
+CF is built on the React context API. As such, it is easy to use and there is a plethora of documentation available online. But this also means it carries some of the well documented efficiency pitfalls inherent to the context API. The `CantusFirmusSubscriber` HOC uses React's memoization to mitigate these issues and prevent unnecessary re-renders. It is very easy to refactor a component to use the CantusFirmusSubscriber HOC.
 
 ___
 
