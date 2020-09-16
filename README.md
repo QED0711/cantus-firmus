@@ -3,7 +3,16 @@
 - [About](#about)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-    - [initialization](#qs-initialization)
+    - [Initialization](#initialization)
+    - [Wrapping components with the state provider](#wrapping-components-with-the-state-provider)
+    - [Subscribing to the state context](#subscribing-to-the-state-context)
+    - [Adding custom setters](#adding-custom-setters)
+    - Adding methods (coming soon)
+    - Other properties (coming soon)
+    - Command line interface (coming soon)
+- [Efficient Updating](#efficient-updating)
+- Persistance and multi window communication (Coming Soon)
+- [Configuration](#configuration)
 
 ___
 
@@ -184,7 +193,7 @@ And with that we have a quick and easy way to implement our own setter logic.
 
 ___
 
-# Efficient Rendering
+# Efficient Updating
 
 ## Subscriber
 
@@ -230,7 +239,7 @@ Context definitions are just object with the following properties:
 
 ___
 
-<h1 id="configuration">Configuration</h1>
+# Configuration:
 
 ## Initialization Options:
 
