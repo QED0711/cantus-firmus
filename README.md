@@ -1,4 +1,13 @@
-## About:
+# Index
+
+- [About](#about)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+    - [initialization](#qs-initialization)
+
+___
+
+<h1 id="about">About:</h1>
 
 **Cantus Firmus** is a React state management package with a focus on simplicity, pattern familiarity, and the automation of repetitive and sometimes complex tasks. CF handles the mundane parts of state management, while also providing simple ways to accomplish typically challenging things.  
 
@@ -11,13 +20,13 @@ At a glance, some of the main features of Cantus Firmus are:
 - Efficiency measures to prevent unnecessary re-renders on global state changes
 
 ---
-## Installation:
+# Installation:
 
 ```
 npm install cantus-firmus
 ```
 ___
-## Quick Start:
+# Quick Start:
 
 ### Initialization:
 
@@ -175,11 +184,53 @@ And with that we have a quick and easy way to implement our own setter logic.
 
 ___
 
-## CantusFirmusSubscriber HOC
+# Efficient Rendering
 
-CF is built on the React context API. As such, it is easy to use and there is a plethora of documentation available online. But this also means it carries some of the well documented efficiency pitfalls inherent to the context API. The `CantusFirmusSubscriber` HOC uses React's memoization to mitigate these issues and prevent unnecessary re-renders. It is very easy to refactor a component to use the CantusFirmusSubscriber HOC.
+## Subscriber
+
+CF is built on the React context API. While it inherits the ease of use from React Context, it also inherits some efficiency pitfalls regarding subscriber component updates and re-renders. CF comes with a custom `subscribe` wrapper that uses React's memoization to mitigate these issues and prevent unnecessary re-renders. It is very easy to refactor a component to use the `subscribe` HOC.
+
+Rather than subscribing to a context via traditional means like `Context.Consumer`, or the `useContext` hook, we use the included `subscribe` wrapper. It is even possible to subscribe to multiple contexts this way.
+
+```
+import React from 'react';
+
+// 1. import the subscribe function from CF 
+import { subscribe } from 'cantus-firmus'; 
+
+// 2. import your context(s)
+import { MainContext } from './state/main/contextProvider'; 
+import { SecondaryContext } from './state/secondary/contextProvider';
+
+// 3. define your component
+const MyCustomComponent = (props) => {
+
+    // Context(s) will get passed in the props, and can be destructured from there 
+    const { main, secondary } = props; 
+
+    // do other component stuff...
+}
+
+// 4. subscribe component to context(s)
+export default subscribe(MyCustomComponent, [
+    {context: MainContext, key: "main", dependencies: ["value1", ["nested", "value"]]},
+    {context: SecondaryContext, key: "secondary", dependencies: ["someOtherValue"]},
+])
+```
+
+Components that subscribe to contexts in this way receive those contexts via their props. The `subscribe` function takes in two arguments: your component, and an array of context definitions and relevant dependencies. 
+
+Context definitions are just object with the following properties:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| context | React Context | true | A reference to a context |
+| key | String | false | Defines how the context will be named when it is passed down in props. If omitted, it will default to the following naming convention: if only one context is passed, it will be called "context". If multiple contexts are passed and keys are omitted for all of them, the first context will be named "context1", the second, "context2" and so on. |
+| dependencies | [String or [String]] | true | An array of strings listing the context properties that should trigger a re-render if changed. Nested properties can be indicated by passing an array of strings into the dependency array. |
 
 ___
+
+<h1 id="configuration">Configuration</h1>
 
 ## Initialization Options:
 
