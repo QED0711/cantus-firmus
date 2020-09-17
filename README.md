@@ -24,9 +24,11 @@ At a glance, some of the main features of Cantus Firmus are:
 
 - Minimal boilerplate, and an included CLI to get complex state management setup quickly
 - Dynamically generated setter and getter functions to easily set and access global state
+- Efficiency measures to prevent unnecessary re-renders on global state changes
+- Async/Await syntax with `setState`
 - Configurable state persistence on page reloads
 - Multi-window state sharing and communication
-- Efficiency measures to prevent unnecessary re-renders on global state changes
+
 
 ---
 # Installation:
@@ -229,7 +231,7 @@ export default subscribe(MyCustomComponent, [
 
 Components that subscribe to contexts in this way receive those contexts via their props. The `subscribe` function takes in two arguments: your component, and an array of context definitions and relevant dependencies. 
 
-Context definitions are just object with the following properties:
+Context definitions are just objects with the following properties:
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -239,7 +241,34 @@ Context definitions are just object with the following properties:
 
 ___
 
-# Configuration:
+# Basic Configuration:
+
+## Initializing & Configuring a New CF Instance
+
+CF instances are initialized with a default state and an options object. 
+
+```
+import CantusFirmus from 'cantus-firmus'
+
+const defaultState = {
+    value1: 1,
+    value2: 2,
+    nested: {
+        value: "I'm a nested value"
+    }
+
+const options = {
+    nestedSetters: true
+    nestedGetters: true
+}
+
+const main = new CantusFirmus(defaultState, options)
+
+export const MainContext = main.context;
+export const MainProvider = main.createProvider();
+}
+
+```
 
 ## Initialization Options:
 
@@ -253,6 +282,105 @@ ___
 | developmentWarnings | Boolean | true | if `allowSetterOverwrite` is false, developmentWarnings will warn the developer if they try to overwrite a dynamic setter with custom logic. | 
 | overwriteProtectionLevel | Number (0, 1, >= 2) | 1 | if `allowSetterOverwrite` is false, sets the warning type that a developer will get when overwriting a dynamic setter. `0` will silence warnings, `1` print a console.warn message, and 2 or greater will throw an error and halt execution. |
 
+## Instance Methods:
+
+| Name | Arguments | Description | 
+| --- | --- | --- |
+| addCustomSetters | Setters Object | The setters object contains custom setter methods that internally call `this.setState`. See [Custom Setters](#custom-setters) for more detail. | 
+| addMethods | Methods Object | The methods object contains custom methods that internally have access to the `this` keyword, and can therefore access the instance state and setters. See [Custom Methods](#custom-methods) for more detail. | 
+| addReducers | Reducers Object | The reducers object contains custom reducer methods. See [Custom Reducers](#custom-reducers) for more detail. |
+| addConstants | Constants Object | The constants object is a standard JS object with properties and methods. As the name indicates, these values are not configurable after initialization. Useful for passing down configuration, styles, or helpers methods in your context. Note that any methods added here will not be bound to the provider component, and therefore will not have access to the `this` keyword to reference state, setters, etc. |  
+| ignoreSetters | [String or [String]] | The `ignoreSetters` method is used in conjunction with dynamically generated setters. You may pass in the name of any state property as a string (top level or nested), and no setter for the property will be created. Note that you may still add a custom setter of the same name and this will be included. | 
+| rename | Name Map Object | The `rename` method allows you to rename any property passed in the instance context. This is typically done for symantec reasons. For example, if you passed in {methods: "API"}, you can now destructure `API` from your context value to reference all your methods. This also adds an internal reference, so you could also access `this.API` from your custom setters, for example. |
+
+___
+
+## Custom Setters:
+
+By default, Cantus Firmus dynamically generates setters for all state properties. However, these dynamic setters only allow you to set the single state property in question. If you desire lower level control over the state change for a specific property, or you want to update multiple state properties with one method, you can add custom setters to achieve these goals. 
+
+Custom setters are just methods that get bound to the provider component, and *typically* internally call `this.setState`. Nothing enforces that custom setters must call `this.setState`, but it is recommended that you maintain this pattern for predictable functionality. 
+
+Custom setters are added via the `addCustomSetters` method available on the CF instance. 
+
+```
+const defaultState = {
+    userID: 12345,
+    username: "cantus-firmus"
+} 
+
+const main = new CantusFirmus(defaultState)
+
+const customSetters = {
+    logout(){
+        this.setState({
+            userID: null,
+            username: null
+        })
+    }
+}
+
+main.addCustomSetters(customSetters)
+```
+
+In the above example, we have a state with a `userID` and `username`. When a user logs out, we probably want to clear all user related fields. With the dynamic setters of CF, we could accomplish this in two calls: `setUserID(null)`, and `setUsername(null)`. Since the logout behavior will also change both, it makes more sense to bundle these state operations together. Our custom `logout` setter above does just that, so we now have a convenient, and syntactically correct method to call to logout a user. 
+
+Custom setters are accessed in the same way as dynamic setters.
+
+```
+const myComponent = () => {
+    
+    // destructure setters from context;
+    const { setters } = useContext(MainContext);
+
+    // destructure individuals setter functions from setters
+    // Note that our custom logout setter is available here along with our dynamic setters
+    const { logout, setUserID, setUsername } = setters;
+
+    /*
+    other component stuff...
+    */
+    
+}
+
+```
+### Defining Custom Setters
+
+You define your custom setters as functions in a standard JS object. When you add them to your CF Instance, they get bound to the provider component so that you have access to the `this` keyword. Since custom setters will require a `this` keyword, you cannot use arrow functions when you define them. 
+
+```
+const customSetters = {
+    someSetter(){
+        // this is the recommended syntax
+    },
+
+    someOtherSetter: function(){
+        // this will also work
+    },
+
+    dontDoThis: () => {
+        // this will not work
+    }
+}
+```
+
+### A note on `this.setState` 
+
+Custom setters internally call `this.setState`. Inline with the focus on familiarity, `this.setState` works as you would expect from vanilla React. However, Cantus Firmus allows for the extended ability to use the async/await syntax with `this.setState`.
+
+```
+const customSetters = {
+    async example(){
+        const updatedState = await this.setState(/* some state change here */)
+
+        // updatedState now reflects the state with the state change.
+    }
+}
+```
+
+___
+
+# Advanced Configuration
 ___
 ## Connecting to Local Storage
 
