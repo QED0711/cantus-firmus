@@ -295,9 +295,60 @@ export const MainProvider = main.createProvider();
 
 ___
 
-## Custom Setters:
+## Setters:
 
-By default, Cantus Firmus dynamically generates setters for all state properties. However, these dynamic setters only allow you to set the single state property in question. If you desire lower level control over the state change for a specific property, or you want to update multiple state properties with one method, you can add custom setters to achieve these goals. 
+### Dynamic Setters:
+
+Dynamic setters are automatically generated functions that can perform state updates on single properties in your state. They are generated based on your your default state. For example, if you have a state property called `myValue`, a dynamic setter would be created called `setMyValue`, and any argument passed to `setMyValue` would set `myValue` in state to that argument value
+
+Dynamic setters are turned on by default, and can be turned off by passing `{dynamicSetters: false}` to your CF initialization. 
+
+```
+const defaultState = {
+    myValue: 0
+}
+
+const main = new CantusFirmus(defaultState)
+
+// other initialization steps... 
+```
+
+With that initialization, your `setters` object now has a `setMyValue` method, and you can do something like the following.
+```
+setters.setMyValue(1)
+```
+
+In the event that you wish to use a dynamic setter to set the value based on the previous state, you have two options. 
+
+**Option 1: Use async/await**
+
+```
+const someAsyncFunction = async () => {
+    await setters.setMyValue(state.myValue + 1)
+    await setters.setMyValue(state.myValue + 1)
+    await setters.setMyValue(state.myValue + 1)
+}
+```
+
+By the end of this state transaction, myValue will be increased by 3. This is very clean and concise, but requires the setter call to be wrapped in an async function. Additionally, because the `await` keyword will block execution, excessive use of this pattern can cause a minor performance hit.
+
+**Option 2: Pass a function as the argument**
+
+```
+const addOne = prevState => {
+    return {myValue: prevState.myValue + 1}
+}
+
+setters.setMyValue(addOne)
+setters.setMyValue(addOne)
+setters.setMyValue(addOne)
+```
+
+This will also result in `myValue` being increased by 3. This is slightly more verbose, but does not require that the setter call be wrapped in an async function.
+
+### Custom Setters:
+
+Dynamic setters only allow you to set a single state property at a time. If you desire lower level control over the state change for a specific property, or you want to update multiple state properties with one method, you can add custom setters to achieve these goals. 
 
 Custom setters are just methods that get bound to the provider component, and *typically* internally call `this.setState`. Nothing enforces that custom setters must call `this.setState`, but it is recommended that you maintain this pattern for predictable functionality. 
 
@@ -344,7 +395,7 @@ const myComponent = () => {
 }
 
 ```
-### Defining Custom Setters
+#### Defining Custom Setters
 
 You define your custom setters as functions in a standard JS object. When you add them to your CF Instance, they get bound to the provider component so that you have access to the `this` keyword. Since custom setters will require a `this` keyword, you cannot use arrow functions when you define them. 
 
@@ -358,7 +409,7 @@ const customSetters = {
         // this will also work
     },
 
-    dontDoThis: () => {
+    badIdea: () => {
         // this will not work
     }
 }
@@ -377,6 +428,63 @@ const customSetters = {
     }
 }
 ```
+
+If you are performing a state change that requires information from the previous state, the vanilla React pattern is to pass a function with the previous state as the first argument. This is because React batches state changes, and you cannot be sure that the current value in state will be the same when you execute your setter function. This will still work in CF, but you may also use setState with async/await.
+
+The following two examples accomplish the same thing. They both increase some `count` value in state by 1 while referencing the current value in state.
+
+```
+const customSetters = {
+    standardWay(){
+        this.setState(prevState => {
+            return {count: prevState.count + 1}
+        })
+    },
+
+    async asyncAwaitWay(){
+        await this.setState({count: this.state.count + 1})
+    }
+}
+```
+
+### Methods
+
+It may be the case that you have some helper function that requires access to state and/or state setters. In vanilla React, you would have to pass your state and setters as arguments to the helper function and then reference/execute them within the scope of that helper function. Cantus Firmus provides a much simpler way of accomplishing this via `methods`. 
+
+In CF, you can add custom methods to your CF instance that, like custom setters, get bound to the provider component and get access to the `this` keyword. These methods can then access `this.state` and `this.setters` internally, without you having to pass them in as arguments. This can greatly simplify your code.
+
+Methods are added to your CF instance via the `addMethods` method.
+
+```
+const main = new CantusFirmus(defaultState)
+
+const customMethods = {
+    someCustomMethod(){
+        // can access `this` in here
+    }
+}
+
+main.addMethods(customMethods)
+```
+
+A common use for methods might be to send API calls and then set state based on the response. 
+
+```
+const customMethods = {
+    getUserFriends(){
+        fetch(`https://someAPI.com?userID=${this.state.userID}`)
+            .then(response => response.json())
+            .then(data => this.setters.setUserFriends(data))
+    }
+}
+```
+In the above example, we access both `this.state` and `this.setters`. Now, we can simply call `getUserFriends` without having to pass in state or setters and it will automatically call and set our state for us. 
+
+### Reducers
+
+### Constants
+
+
 
 ___
 
