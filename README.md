@@ -256,6 +256,7 @@ const defaultState = {
     nested: {
         value: "I'm a nested value"
     }
+}
 
 const options = {
     nestedSetters: true
@@ -290,14 +291,14 @@ export const MainProvider = main.createProvider();
 | addMethods | Methods Object | The methods object contains custom methods that internally have access to the `this` keyword, and can therefore access the instance state and setters. See [Custom Methods](#custom-methods) for more detail. | 
 | addReducers | Reducers Object | The reducers object contains custom reducer methods. See [Custom Reducers](#custom-reducers) for more detail. |
 | addConstants | Constants Object | The constants object is a standard JS object with properties and methods. As the name indicates, these values are not configurable after initialization. Useful for passing down configuration, styles, or helpers methods in your context. Note that any methods added here will not be bound to the provider component, and therefore will not have access to the `this` keyword to reference state, setters, etc. |  
-| ignoreSetters | [String or [String]] | The `ignoreSetters` method is used in conjunction with dynamically generated setters. You may pass in the name of any state property as a string (top level or nested), and no setter for the property will be created. Note that you may still add a custom setter of the same name and this will be included. | 
+| ignoreSetters | [String or [String]] | The `ignoreSetters` method is used in conjunction with dynamically generated setters. You may pass in the name of any state property as a string (top level or nested), and no setter for the property will be created. Note that you may still add a custom setter of the same name and this will be included. If your array contains an array of string, this will be considered the path to a nested value. | 
 | rename | Name Map Object | The `rename` method allows you to rename any property passed in the instance context. This is typically done for symantec reasons. For example, if you passed in {methods: "API"}, you can now destructure `API` from your context value to reference all your methods. This also adds an internal reference, so you could also access `this.API` from your custom setters, for example. |
 
 ___
 
 ## Setters:
 
-### Dynamic Setters:
+### **Dynamic Setters:**
 
 Dynamic setters are automatically generated functions that can perform state updates on single properties in your state. They are generated based on your your default state. For example, if you have a state property called `myValue`, a dynamic setter would be created called `setMyValue`, and any argument passed to `setMyValue` would set `myValue` in state to that argument value
 
@@ -346,7 +347,7 @@ setters.setMyValue(addOne)
 
 This will also result in `myValue` being increased by 3. This is slightly more verbose, but does not require that the setter call be wrapped in an async function.
 
-### Custom Setters:
+### **Custom Setters:**
 
 Dynamic setters only allow you to set a single state property at a time. If you desire lower level control over the state change for a specific property, or you want to update multiple state properties with one method, you can add custom setters to achieve these goals. 
 
@@ -395,27 +396,7 @@ const myComponent = () => {
 }
 
 ```
-#### Defining Custom Setters
-
-You define your custom setters as functions in a standard JS object. When you add them to your CF Instance, they get bound to the provider component so that you have access to the `this` keyword. Since custom setters will require a `this` keyword, you cannot use arrow functions when you define them. 
-
-```
-const customSetters = {
-    someSetter(){
-        // this is the recommended syntax
-    },
-
-    someOtherSetter: function(){
-        // this will also work
-    },
-
-    badIdea: () => {
-        // this will not work
-    }
-}
-```
-
-### A note on `this.setState` 
+### **A note on `this.setState`** 
 
 Custom setters internally call `this.setState`. Inline with the focus on familiarity, `this.setState` works as you would expect from vanilla React. However, Cantus Firmus allows for the extended ability to use the async/await syntax with `this.setState`.
 
@@ -447,7 +428,7 @@ const customSetters = {
 }
 ```
 
-### Methods
+### **Methods**
 
 It may be the case that you have some helper function that requires access to state and/or state setters. In vanilla React, you would have to pass your state and setters as arguments to the helper function and then reference/execute them within the scope of that helper function. Cantus Firmus provides a much simpler way of accomplishing this via `methods`. 
 
@@ -480,11 +461,119 @@ const customMethods = {
 ```
 In the above example, we access both `this.state` and `this.setters`. Now, we can simply call `getUserFriends` without having to pass in state or setters and it will automatically call and set our state for us. 
 
-### Reducers
+### **Defining Custom Setters & Methods**
 
-### Constants
+You define your custom setters and methods as functions in a standard JS object. When you add them to your CF Instance, they get bound to the provider component so that you have access to the `this` keyword. Since custom setters and methods will require a `this` keyword, you cannot use arrow functions when you define them. 
 
+```
+{
+    someSetter(){
+        // this is the recommended syntax
+    },
 
+    someOtherSetter: function(){
+        // this will also work
+    },
+
+    badIdea: () => {
+        // this will not work
+    }
+}
+```
+### Setters Vs Methods
+
+Setters and methods may seem rather similar as they are just collections of functions bound to a provider component. While you *can* substitute one for the other in any situation, they have been provided as separate utilities so that their function and purpose do not conflict. 
+
+Setters are intended to house the logic that changes state. Each setter should call `this.setState`. Methods are a level of abstraction higher. They should not concern themselves with directly setting state or any of the logic that is required in that action. Rather, they allow for simple access to state and setters, and house any logic that later calls on these items.  
+
+### **Reducers**
+
+> **Note:** Reducers are an experimental feature in Cantus Firmus, and are still in development at this time. They currently offer less functionality and flexibility than the previously mentioned `setters`. 
+
+For those how prefer the reducer/dispatch format for setting state, you can add custom reducers to your CF instance with the `addReducers` method. Reducers are just functions that return the updated (not directly mutated) state.
+
+```
+const defaultState = {
+    num1: 0,
+    num2: 0,
+
+    str1: "Hello",
+    str2: "world",
+}
+
+const main = new CantusFirmus(defaultState)
+
+const customReducers = {
+
+    numReducer(state={}, action){
+        switch(action.type){
+            case "UPDATE_NUM_1":
+                return {...state, num1: action.payload}
+            case "UPDATE_NUM_2":
+                return {...state, num1: action.payload}
+            default:
+                return state
+        }
+    },
+
+    stringReducer(state={}, action){
+        switch(action.type){
+            case "UPDATE_STR_1":
+                return {...state, str1: action.payload}
+            case "UPDATE_STR_2":
+                return {...state, str2: action.payload}
+            default:
+                return state
+        }
+    }
+}
+```
+
+We can define multiple reducer functions to separate the logic of our state changes. In the above example, we have one reducer that handles updates to the `num` properties, and one that updates the `str` properties.
+
+Internally, a dispatch function is generated for each reducer. When you access reducers in a child component, you aren't actually accessing the reducer that you made, but an object containing these auto generated dispatch functions namespaced to the reducer name you specified. When we want to execute a specific action, we do the following:
+
+```
+const myComponent = () => {
+
+    // destructure state and reducers
+    const { state, reducers } = useContext(MyContext);
+    
+    // destructure specific reducer function we want
+    const { stringReducer } = reducers
+
+    const handleClick = e => {
+        // execute the auto generated dispatch function
+        stringReducer.dispatch(state, {type: "UPDATE_STR_1", payload: "Goodbye"})
+    }
+    
+    // do other component stuff...
+}
+
+```
+
+### **Constants**
+
+As the name suggests, constants are values passed down in your context that cannot be changes. Constants are useful for providing things like configuration and styles to your subscribed components. 
+
+Constants are defined in an object, and are added to your CF instance via the `addConstants` method.
+
+```
+const main = new CantusFirmus ({})
+
+const myConstants = {
+    largeRedText: {
+        color: "red",
+        fontSize: "2rem"
+    },
+
+    myConfigValue: "some config value here"
+}
+
+main.addConstants(myConstants)
+```
+
+Note that you can also include functions in your constants definition. However, Unlike `setters` and `methods`, any function defined in your constants will not be bound to your provider component, and will therefore not have a `this` keyword associated with the provider/context. This is fine for utility functions which do not require knowledge of state or setters. 
 
 ___
 
