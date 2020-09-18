@@ -293,6 +293,7 @@ export const MainProvider = main.createProvider();
 | addConstants | Constants Object | The constants object is a standard JS object with properties and methods. As the name indicates, these values are not configurable after initialization. Useful for passing down configuration, styles, or helpers methods in your context. Note that any methods added here will not be bound to the provider component, and therefore will not have access to the `this` keyword to reference state, setters, etc. |  
 | ignoreSetters | [String or [String]] | The `ignoreSetters` method is used in conjunction with dynamically generated setters. You may pass in the name of any state property as a string (top level or nested), and no setter for the property will be created. Note that you may still add a custom setter of the same name and this will be included. If your array contains an array of string, this will be considered the path to a nested value. | 
 | rename | Name Map Object | The `rename` method allows you to rename any property passed in the instance context. This is typically done for symantec reasons. For example, if you passed in {methods: "API"}, you can now destructure `API` from your context value to reference all your methods. This also adds an internal reference, so you could also access `this.API` from your custom setters, for example. |
+| connectToLocalStorage | Options Obeject | Duplicates local state to the browser's local storage for persistence or for sharing between multiple windows under the same domain. See [ConnectToLocalStorage](#connectToLocalStorage) for more detail. |
 
 ___
 
@@ -579,15 +580,32 @@ ___
 
 # Advanced Configuration
 ___
-## Connecting to Local Storage
 
-You can easily connect your entire state, or selected parts of your state to the browser's local storage for persistance, or to share with child windows spawned from the parent window. 
+Cantus Firmus makes two typically challenging scenarios quite simple to achieve: state persistance, and sharing state between windows under the same domain. Both are accomplished by saving and updating state in the browser's local storage. 
+
+## ConnectToLocalStorage
+
+Connecting a CF instance's state to local storage is done through the `connectToLocalStorage` method. There are several options that can be defined when establishing this connection. 
+
+### ConnectToLocalStorage Options:
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| name | String (required) | null | A string that is unique from any other `localStorage` key name (including any other names set in other CF instances). This will become the key name under which the instances state is stored in `localStorage`. | 
+| initializeFromLocalStorage | Boolean | false | Specifies if the state should be loaded from the `localStorage` rather than with the default initialization values. Note that if the `localStorage` does not contain a reference to the state, default values will be loaded. Regardless of what value is set in this field, windows with names provided in the `subscriberWindows` parameter will initialize from localStorage. | 
+| providerWindow | String | null | Specifies the `window.name` property of the parent window. If no value is given, it will default to the same string specified in the `name` option. | 
+| subscriberWindows | [String] | Empty Array | An array of strings that has a comprehensive list of the names of the windows that may subscribe to the shared state through `localStorage`. These windows will automatically initialize from localStorage regardless of the value set in `initializeFromLocalStorage`| 
+| removeChildrenOnUnload | Boolean | true | If true, will close all children windows spawned from the `windowManager.open` method. Note that if a child window spawns another window (grandchild), that window will also be closed if this parameter is set to true. |
+| clearStorageOnUnload | Boolean | true | If true, when the `providerWindow` is closed, all associated state stored in `localStorage` will be removed. |
+| privateStatePaths | [String or [String]] | Empty Array | Specifies state parameters of the provider window that will not be saved to local storage. Elements in the array may be strings or arrays of strings. The latter options allows for you to specify a nested parameter as private while still passing parameters higher in the state structure. This feature is useful if you do not wish to share parts of your state with child/grandchild windows, or if you have marginally sensitive data in your state and do not wish to expose it to local storage. |
+
+> Note: Local storage is easily accessible and editable by the end user. Keep this in mind when you choose what state to expose in local storage. 
+
+### Initialization:
 
 ```
-// initialize a new CF instance and call it "main"
 const main = new CantusFirmus({value1: 1, value2: 2})
 
-// connect your CF instance to localStorage
 main.connectToLocalStorage({
     name: "main", // this is a required parameter
     providerWindow: "mainWindow",
@@ -597,22 +615,69 @@ main.connectToLocalStorage({
     privateStatePaths: ["value1"]
 })
 ```
-For the second step in the above code example, we connect our CF instance to our local storage, and set a number of parameters for how it will behave. Those parameters are explained in more detail in the table below, but one very important parameter to remember is `name`. You must provide a unique name in this field.
 
-## Multiwindow Support Options
+### Persisting State with Local Storage
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| name | String (required) | null | A string that is unique from any other `localStorage` key name (including any other names set in other CF instances). This will become the key name under which the state is stored in `localStorage`. | 
-| initializeFromLocalStorage | Boolean | false | Specifies if the state should be loaded from the `localStorage` rather than with the default initialization values. Note that if the `localStorage` does not contain a reference to the state, default values will be loaded. Regardless of what value is set here, windows with names provided in the `subscriberWindows` parameter will initialize from localStorage. | 
-| providerWindow | String | null | Specifies the `window.name` property of the parent window. If no value is given, it will default to the same string specified in the `name` option. | 
-| subscriberWindows | [String] | Empty Array | An array of strings that has a comprehensive list of the names of the windows that may subscribe to the shared state through `localStorage`. These windows will automatically initialize from localStorage regardless of the value set in `initializeFromLocalStorage`| 
-| removeChildrenOnUnload | Boolean | true | If true, will close all children windows spawned from the `windowManager.open` method. Note that if a child window spawns another window (grandchild), that window will also be closed if this parameter is set to true. |
-| clearStorageOnUnload | Boolean | true | If true, when the `providerWindow` is closed, all associated state stored in `localStorage` will be removed. |
-| privateStatePaths | [String or [String]] | Empty Array | Specifies state parameters of the provider window that will not be passed down to any spawned children or grandchildren. Elements in the array may be strings or arrays of strings. The latter options allows for you to specify a nested parameter as private while still passing parameters higher in the state structure. |
-
-## Persisting with Local Storage
-
-While many of the options that you set in `connectToLocalStorage` are aimed at providing functionality for sharing state between multiple windows, you can forgo many of them for clean and easy *persistance on page reload* functionality. If you set `initializeFromLocalStorage` to true, your main/provider window will load default state values from those specified in the local storage. If this is the desired functionality, make sure to also set `clearStorageOnUnload` to false, so the local storage persists if you reload the page. 
+Persisting state over page reloads is very easy with CF. If you set `initializeFromLocalStorage` to true, your main/provider window will load default state values from those specified in the local storage. If this is the desired functionality, make sure to also set `clearStorageOnUnload` to false, so the local storage persists in that domain even if the user leaves the page. 
 
 If there are some state values that you wish not to initialize from local storage, you can set them in the `privateStatePaths` parameter. Any value indicated in this parameter will not ever be saved to local storage. If you are initializing from a persisted local storage, and have private state values specified, those values will initialize to whatever you have set in your default state object. 
+
+```
+const main = new CantusFirmus({value1: 1, value2: 2})
+
+main.connectToLocalStorage({
+    name: "main",
+    initializeFromLocalStorage: true,
+    clearStorageOnUnload: false,
+    privateStatePaths: ["value1"]
+})
+
+// other CF configuration...
+```
+
+### Inter-Window Communication through Local Storage
+
+Local storage is synced between all windows on the same domain. In saving our state to local storage, it becomes available to all other open windows on that domain. Even though this is the default behavior of your browser, there is still typically substantial work that goes into managing state across windows. Cantus Firmus handles many common scenarios in the background, such as listening for local storage updates and then updating the window's state. It also provides a custom `windowManager` method for spawning new windows and keeping track of those spawned windows. 
+
+Just like the provider/subscriber pattern in React context, windows are organized into provider and subscriber roles. The original window becomes the provider, and all children spawned from it with the windowManager become subscribers. Provider windows will have access to the whole state object. Subscribers only have access to those state parameters not set in `privateStatePaths`.   
+
+#### **WindowManager**
+
+Each CF instance connected to local storage gets a windows manager. The window manager has three methods:
+
+| Name | Arguments | Description |
+| --- | --- | --- |
+| open | url: string, name: string, params: object | Opens a new window and keeps reference to that window locally so it can later close it. The url and name arguments are both required. The params object is options and allows you to set query params on the new window |
+| close | name: string | Closes the target window with the given name. Note that it is best to close a window through this method as it will also remove the local reference to that window. If you close a window without this method, the reference will still exist in the provider window. | 
+| getChildren | none | Returns an object with references to all spawned windows. |  
+
+
+```
+const myComponent = () => {
+    const { windowManager } = useContext(MyContext)
+
+
+    const handleOpenClick = e => {
+        // the call below will open a new window at "/config?theme=dark_mode", and name the window "config"
+        windowManager.open(
+            `${window.location.hostname}/config`,
+            "config",
+            {theme: "dark_mode"}
+        )
+    }
+
+    const handleCloseClick = e => {
+        windowManager.close("config")
+    }
+
+    return (
+        <>
+            <button onClick={handleOpenClick}>Open Config Window</button>
+            <button onClick={handleCloseClick}>Close Config Window</button>
+        </>
+    )
+
+}
+
+```
+
