@@ -8,12 +8,12 @@
     - [Subscribing to the state context](#subscribing-to-the-state-context)
     - [Adding custom setters](#adding-custom-setters)
 - [Basic Configuration](#basic-configuration)
-    - [Initializing & Configuring a New CF Instance](#initializing-configuring-a-new-cf-instance)
+    - [Initializing & Configuring a New CF Instance](#initializing--configuring-a-new-cf-instance)
         - [Initialization Options](#initialization-options)
         - [Instant Methods](#instance-methods)
     - [Setters](#setters)
     - [Methods](#methods)
-        - [Defining Custom Setters & Methods](#defining-custom-setters-&-methods)
+        - [Defining Custom Setters & Methods](#defining-custom-setters--methods)
         - [Setters Vs Methods](#setters-vs-methods)
     - [Getters](#getters)
     - [Reducers](#reducers)
@@ -758,3 +758,5 @@ const myComponent = () => {
 ```
 
 # Command Line Interface
+
+Coming Soon
