@@ -7,12 +7,24 @@
     - [Wrapping components with the state provider](#wrapping-components-with-the-state-provider)
     - [Subscribing to the state context](#subscribing-to-the-state-context)
     - [Adding custom setters](#adding-custom-setters)
-    - Adding methods (coming soon)
-    - Other properties (coming soon)
-    - Command line interface (coming soon)
-- [Efficient Updating](#efficient-updating)
-- Persistance and multi window communication (Coming Soon)
-- [Configuration](#configuration)
+- [Basic Configuration](#basic-configuration)
+    - [Initializing & Configuring a New CF Instance](#initializing-configuring-a-new-cf-instance)
+        - [Initialization Options](#initialization-options)
+        - [Instant Methods](#instance-methods)
+    - [Setters](#setters)
+    - [Methods](#methods)
+        - [Defining Custom Setters & Methods](#defining-custom-setters-&-methods)
+        - [Setters Vs Methods](#setters-vs-methods)
+    - [Getters](#getters)
+    - [Reducers](#reducers)
+    - [Constants](#constants)
+- [Advanced Configuration](#advanced-configuration)
+    - [Efficient Updating](#efficient-updating)
+    - [ConnectToLocalStorage](#connecttolocalstorage)
+    - [Persisting State with Local Storage](#persisting-state-with-local-storage)
+    - [Inter-Window Communication through Local Storage](#inter-window-communication-through-local-storage)
+- [Command Line Interface](#command-line-interface)
+
 
 ___
 
@@ -89,6 +101,8 @@ With this basic setup, you are already provided with a number of useful ways to 
 
 ### Subscribing to the state context
 
+> *See [Efficient Updating](#efficient-updating) for an alternate approach to component subscription*
+
 ```
     // ExampleChildComponent.js (within the tree structure inheriting from your provider component)
 
@@ -119,7 +133,7 @@ With this basic setup, you are already provided with a number of useful ways to 
     }
 ```
 
-Using destructuring in the above example, we get access to a `state` variable containing the state of our CF instance, and a `setters` variable, which is an object containing dynamically generated setter methods for that state. If you are familiar with the `useState` hook that provides you with an accessor variable and a setter for that variable, this is the same pattern, but placed over your entire state definition and available throughout your state tree. See [Dynamic Setters](#dynamic-setters) for more details on naming conventions and other options.
+Cantus Firmus is based on React's context API, and is easily accessed by traditional means (useContext, Context.Consumer). Using destructuring in the above example, we get access to a `state` variable containing the state of our CF instance, and a `setters` variable, which is an object containing dynamically generated setter methods for that state. If you are familiar with the `useState` hook that provides you with an accessor variable and a setter for that variable, this is the same pattern, but placed over your entire state definition and available throughout your state tree. See [Dynamic Setters](#dynamic-setters) for more details on naming conventions and other options.
 
 ### Adding custom setters
 
@@ -195,52 +209,6 @@ And with that we have a quick and easy way to implement our own setter logic.
 
 ___
 
-# Efficient Updating
-
-## Subscriber
-
-CF is built on the React context API. While it inherits the ease of use from React Context, it also inherits some efficiency pitfalls regarding subscriber component updates and re-renders. CF comes with a custom `subscribe` wrapper that uses React's memoization to mitigate these issues and prevent unnecessary re-renders. It is very easy to refactor a component to use the `subscribe` HOC.
-
-Rather than subscribing to a context via traditional means like `Context.Consumer`, or the `useContext` hook, we use the included `subscribe` wrapper. It is even possible to subscribe to multiple contexts this way.
-
-```
-import React from 'react';
-
-// 1. import the subscribe function from CF 
-import { subscribe } from 'cantus-firmus'; 
-
-// 2. import your context(s)
-import { MainContext } from './state/main/contextProvider'; 
-import { SecondaryContext } from './state/secondary/contextProvider';
-
-// 3. define your component
-const MyCustomComponent = (props) => {
-
-    // Context(s) will get passed in the props, and can be destructured from there 
-    const { main, secondary } = props; 
-
-    // do other component stuff...
-}
-
-// 4. subscribe component to context(s)
-export default subscribe(MyCustomComponent, [
-    {context: MainContext, key: "main", dependencies: ["value1", ["nested", "value"]]},
-    {context: SecondaryContext, key: "secondary", dependencies: ["someOtherValue"]},
-])
-```
-
-Components that subscribe to contexts in this way receive those contexts via their props. The `subscribe` function takes in two arguments: your component, and an array of context definitions and relevant dependencies. 
-
-Context definitions are just objects with the following properties:
-
-| Name | Type | Required | Description |
-| --- | --- | --- | --- |
-| context | React Context | true | A reference to a context |
-| key | String | false | Defines how the context will be named when it is passed down in props. If omitted, it will default to the following naming convention: if only one context is passed, it will be called "context". If multiple contexts are passed and keys are omitted for all of them, the first context will be named "context1", the second, "context2" and so on. |
-| dependencies | [String or [String]] | true | An array of strings listing the context properties that should trigger a re-render if changed. Nested properties can be indicated by passing an array of strings into the dependency array. |
-
-___
-
 # Basic Configuration:
 
 ## Initializing & Configuring a New CF Instance
@@ -271,7 +239,7 @@ export const MainProvider = main.createProvider();
 
 ```
 
-## Initialization Options:
+## Initialization Options
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -283,7 +251,7 @@ export const MainProvider = main.createProvider();
 | developmentWarnings | Boolean | true | if `allowSetterOverwrite` is false, developmentWarnings will warn the developer if they try to overwrite a dynamic setter with custom logic. | 
 | overwriteProtectionLevel | Number (0, 1, >= 2) | 1 | if `allowSetterOverwrite` is false, sets the warning type that a developer will get when overwriting a dynamic setter. `0` will silence warnings, `1` print a console.warn message, and 2 or greater will throw an error and halt execution. |
 
-## Instance Methods:
+## Instance Methods
 
 | Name | Arguments | Description | 
 | --- | --- | --- |
@@ -293,13 +261,13 @@ export const MainProvider = main.createProvider();
 | addConstants | Constants Object | The constants object is a standard JS object with properties and methods. As the name indicates, these values are not configurable after initialization. Useful for passing down configuration, styles, or helpers methods in your context. Note that any methods added here will not be bound to the provider component, and therefore will not have access to the `this` keyword to reference state, setters, etc. |  
 | ignoreSetters | [String or [String]] | The `ignoreSetters` method is used in conjunction with dynamically generated setters. You may pass in the name of any state property as a string (top level or nested), and no setter for the property will be created. Note that you may still add a custom setter of the same name and this will be included. If your array contains an array of string, this will be considered the path to a nested value. | 
 | rename | Name Map Object | The `rename` method allows you to rename any property passed in the instance context. This is typically done for symantec reasons. For example, if you passed in {methods: "API"}, you can now destructure `API` from your context value to reference all your methods. This also adds an internal reference, so you could also access `this.API` from your custom setters, for example. |
-| connectToLocalStorage | Options Obeject | Duplicates local state to the browser's local storage for persistence or for sharing between multiple windows under the same domain. See [ConnectToLocalStorage](#connectToLocalStorage) for more detail. |
+| connectToLocalStorage | Options Obeject | Duplicates local state to the browser's local storage for persistence or for sharing between multiple windows under the same domain. See [ConnectToLocalStorage](#connecttolocalstorage) for more detail. |
 
 ___
 
-## Setters:
+## Setters
 
-### **Dynamic Setters:**
+### **Dynamic Setters**
 
 Dynamic setters are automatically generated functions that can perform state updates on single properties in your state. They are generated based on your your default state. For example, if you have a state property called `myValue`, a dynamic setter would be created called `setMyValue`, and any argument passed to `setMyValue` would set `myValue` in state to that argument value
 
@@ -348,7 +316,7 @@ setters.setMyValue(addOne)
 
 This will also result in `myValue` being increased by 3. This is slightly more verbose, but does not require that the setter call be wrapped in an async function.
 
-### **Custom Setters:**
+### **Custom Setters**
 
 Dynamic setters only allow you to set a single state property at a time. If you desire lower level control over the state change for a specific property, or you want to update multiple state properties with one method, you can add custom setters to achieve these goals. 
 
@@ -429,7 +397,7 @@ const customSetters = {
 }
 ```
 
-### **Methods**
+## Methods
 
 It may be the case that you have some helper function that requires access to state and/or state setters. In vanilla React, you would have to pass your state and setters as arguments to the helper function and then reference/execute them within the scope of that helper function. Cantus Firmus provides a much simpler way of accomplishing this via `methods`. 
 
@@ -487,7 +455,68 @@ Setters and methods may seem rather similar as they are just collections of func
 
 Setters are intended to house the logic that changes state. Each setter should call `this.setState`. Methods are a level of abstraction higher. They should not concern themselves with directly setting state or any of the logic that is required in that action. Rather, they allow for simple access to state and setters, and house any logic that later calls on these items.  
 
-### **Reducers**
+## Getters
+
+In most cases, the easiest way to access your CF instance state is by the standard dot notation.
+
+```
+const { state } = useContext(MyContext)
+
+state.myValue
+```
+
+However, there are situations, such as closures, where this way of accessing state may become problematic.
+
+```
+// This will not work!
+
+const { state } = useContext(MyContext)
+
+useEffect(() => {
+
+    const myInterval = setInterval(() => {
+        if(state.myValue){
+            // execute some additional code here
+        } else {
+            clearInterval(myInterval)
+        }
+    }, 1000)
+
+    return () => { clearInterval(myInterval) }
+
+}, [])
+```
+
+In the above example, inside the `useEffect` callback, we have defined an interval that performs some action every second so long as `myValue` in the state is truthy. Presumably, we would want to be able to change the value of `myValue` to something falsy in some other component, and to have that cancel the interval. Due to the closure, this will not work as `state.myValue` will be set inside the interval callback to whatever its initial value was, and no updates will be read.  
+
+For situations such as these, all CF contexts are initialized with dynamic getter methods by default. As the name implies, these getters serve as wrappers by which to access your state. Just as we get a `setters` object in our context, we also get a `getters` object that is auto populated with getter functions. The syntax is also similar to our setters: if you have a value, `myValue`, you will then have a getter called `getMyValue`. If you require nested getters, you can set `nestedGetters` to `true` in your CF initialization. 
+
+We can very easily change the code above to work with one of these dynamic getters. 
+
+```
+// This will work!
+
+const { getters } = useContext(MyContext)
+
+useEffect(() => {
+
+    const myInterval = setInterval(() => {
+        if(getters.getMyValue()){
+            // execute some additional code here
+        } else {
+            clearInterval(myInterval)
+        }
+    }, 1000)
+
+    return () => { clearInterval(myInterval) }
+
+}, [])
+```
+Now, each time the interval is run, it accesses the `myValue` property in our state via the getter, `getMyValue`, and so updates to the property are observed. 
+
+In short, getters are an excellent option for any situation where closures prevent state updates from being observed. 
+
+## Reducers
 
 > **Note:** Reducers are an experimental feature in Cantus Firmus, and are still in development at this time. They currently offer less functionality and flexibility than the previously mentioned `setters`. 
 
@@ -553,7 +582,7 @@ const myComponent = () => {
 
 ```
 
-### **Constants**
+## Constants
 
 As the name suggests, constants are values passed down in your context that cannot be changes. Constants are useful for providing things like configuration and styles to your subscribed components. 
 
@@ -581,9 +610,56 @@ ___
 # Advanced Configuration
 ___
 
-Cantus Firmus makes two typically challenging scenarios quite simple to achieve: state persistance, and sharing state between windows under the same domain. Both are accomplished by saving and updating state in the browser's local storage. 
+## Efficient Updating
+
+### Subscriber
+
+CF is built on the React context API. While it inherits the ease of use from React Context, it also inherits some efficiency pitfalls regarding subscriber component updates and re-renders. CF comes with a custom `subscribe` wrapper that uses React's memoization to mitigate these issues and prevent unnecessary re-renders. It is very easy to refactor a component to use the `subscribe` HOC.
+
+Rather than subscribing to a context via traditional means like `Context.Consumer`, or the `useContext` hook, we use the included `subscribe` wrapper. It is even possible to subscribe to multiple contexts this way.
+
+```
+import React from 'react';
+
+// 1. import the subscribe function from CF 
+import { subscribe } from 'cantus-firmus'; 
+
+// 2. import your context(s)
+import { MainContext } from './state/main/contextProvider'; 
+import { SecondaryContext } from './state/secondary/contextProvider';
+
+// 3. define your component
+const MyCustomComponent = (props) => {
+
+    // Context(s) will get passed in the props, and can be destructured from there 
+    const { main, secondary } = props; 
+
+    // do other component stuff...
+}
+
+// 4. subscribe component to context(s)
+export default subscribe(MyCustomComponent, [
+    {context: MainContext, key: "main", dependencies: ["value1", ["nested", "value"]]},
+    {context: SecondaryContext, key: "secondary", dependencies: ["someOtherValue"]},
+])
+```
+
+Components that subscribe to contexts in this way receive those contexts via their props. The `subscribe` function takes in two arguments: your component, and an array of context definitions and relevant dependencies. 
+
+Context definitions are just objects with the following properties:
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| context | React Context | true | A reference to a context |
+| key | String | false | Defines how the context will be named when it is passed down in props. If omitted, it will default to the following naming convention: if only one context is passed, it will be called "context". If multiple contexts are passed and keys are omitted for all of them, the first context will be named "context1", the second, "context2" and so on. |
+| dependencies | [String or [String]] | true | An array of strings listing the context properties that should trigger a re-render if changed. Nested properties can be indicated by passing an array of strings into the dependency array. |
+
+___
+
 
 ## ConnectToLocalStorage
+
+Cantus Firmus makes two typically challenging scenarios quite simple to achieve: state persistance, and sharing state between windows under the same domain. Both are accomplished by saving and updating state in the browser's local storage. 
 
 Connecting a CF instance's state to local storage is done through the `connectToLocalStorage` method. There are several options that can be defined when establishing this connection. 
 
@@ -616,7 +692,7 @@ main.connectToLocalStorage({
 })
 ```
 
-### Persisting State with Local Storage
+## Persisting State with Local Storage
 
 Persisting state over page reloads is very easy with CF. If you set `initializeFromLocalStorage` to true, your main/provider window will load default state values from those specified in the local storage. If this is the desired functionality, make sure to also set `clearStorageOnUnload` to false, so the local storage persists in that domain even if the user leaves the page. 
 
@@ -635,7 +711,7 @@ main.connectToLocalStorage({
 // other CF configuration...
 ```
 
-### Inter-Window Communication through Local Storage
+## Inter-Window Communication through Local Storage
 
 Local storage is synced between all windows on the same domain. In saving our state to local storage, it becomes available to all other open windows on that domain. Even though this is the default behavior of your browser, there is still typically substantial work that goes into managing state across windows. Cantus Firmus handles many common scenarios in the background, such as listening for local storage updates and then updating the window's state. It also provides a custom `windowManager` method for spawning new windows and keeping track of those spawned windows. 
 
@@ -681,3 +757,4 @@ const myComponent = () => {
 
 ```
 
+# Command Line Interface
