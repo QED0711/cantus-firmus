@@ -115,7 +115,7 @@ With this basic setup, you are already provided with a number of useful ways to 
         const { state, setters } = useContext(MyContext);
         
         // state = {greeting: "Hello", subject: "world"}
-        // setters = {setMyVal1: function(...), setMyVal2: function(...)}
+        // setters = {setGreeting: function(...), setSubject: function(...)}
 
         return (
             <>
