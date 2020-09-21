@@ -65,8 +65,8 @@ First, we create a CF instance, and pass it our default state.
     import CantusFirmus from 'cantus-firmus'
 
     const state = {
-        variable1: 1,
-        variable2: 2
+        greeting: "Hello", 
+        subject: "world"
     }
 
     const myState = new CantusFirmus(state)
@@ -77,7 +77,7 @@ First, we create a CF instance, and pass it our default state.
 
 ### Wrapping components with the state provider:
 
-Once you have created and exported your state context and provider, you can use them as you would any context/provider pair. See [CantusFirmusSubscriber](#) for how to mitigate some of the efficiency issues inherent in the React context API. 
+Once you have created and exported your state context and provider, you can use them as you would any context/provider pair. See [Efficient Updating](#efficient-updating) for how to mitigate some of the efficiency issues inherent in the React context API. 
 
 First, wrap whichever children components you want to have access to the state context in your provider. This example wraps the entire component tree in the provider, giving all children access to the state. 
 
@@ -114,32 +114,36 @@ With this basic setup, you are already provided with a number of useful ways to 
     const ExampleChildComponent = () => {
         const { state, setters } = useContext(MyContext);
         
-        // state = {variable1: 1, variable2: 2}
-        // setters = {setVariable1: function(...), setVariable2: function(...)}
+        // state = {greeting: "Hello", subject: "world"}
+        // setters = {setMyVal1: function(...), setMyVal2: function(...)}
 
         return (
             <>
+                <h1>{state.greeting}, {state.subject}</h1>
+
                 <button onClick={
-                    async e => {await setters.setVariable1(state.variable1 + 1)}
+                    e => {setters.setGreeting("Hey there")}
                 }>
-                    Button 1
+                    Change Greeting
                 </button>
 
                 <button onClick={
-                    async e => {await setters.setVariable2(state.variable2 - 1)}
+                    e => {setters.setSubject("friend")}
                 }>
-                    Button 2
+                    Change Subject
                 </button>
             </>
         )
     }
 ```
 
-Cantus Firmus is based on React's context API, and is easily accessed by traditional means (useContext, Context.Consumer). Using destructuring in the above example, we get access to a `state` variable containing the state of our CF instance, and a `setters` variable, which is an object containing dynamically generated setter methods for that state. If you are familiar with the `useState` hook that provides you with an accessor variable and a setter for that variable, this is the same pattern, but placed over your entire state definition and available throughout your state tree. See [Dynamic Setters](#dynamic-setters) for more details on naming conventions and other options.
+Cantus Firmus is based on React's context API, and is easily accessed by traditional means (useContext, Context.Consumer). Using destructuring in the above example, we get access to a `state` variable containing the state of our CF instance, and a `setters` variable, which is an object containing dynamically generated setter methods for that state. If you are familiar with the `useState` hook that provides you with an accessor variable and a setter for that variable, this is the same pattern, but placed over your entire state definition at a global level, and available throughout your state tree. See [Dynamic Setters](#dynamic-setters) for more details on naming conventions and other options.
+
+From even this basic setup, you can see that Cantus Firmus handles the basic parts of state management for you by creating an accessible context for your state, and providing your with methods to change that state. Now, you get to spend more time thinking about and designing your application, and less time worrying about state management!
 
 ### Adding custom setters
 
-In the above example, we have made a basic increment/decrement counter using our state and provided setters. But what if you wanted setter methods called `incrementVariable1` and `decrementVariable2` so you didn't have to hard code the functionality every time? Fortunately, this is quite easy to accomplish with custom setters. 
+In the above example, we have some strings, and the ability to change those string on button clicks. But what if you wanted to change both strings at the same time? Fortunately, this is quite easy to accomplish with custom setters. 
 
 Like the standard setState pattern of vanilla React, we can define methods that use `setState` to alter the state of a variable (or variables) without changing it directly. However, we then typically have to deal with binding so as to keep the `setState` call in the correct scope. CF handles all the background binding for us so we can just tell it what we want our method to do. 
 
@@ -162,17 +166,14 @@ We'll adjust our `myState.js` file as follows:
     // :::::::::::::::::::::::::::::
 
     myState.addCustomSetters({
-        incrementVariable1(){
-            this.setState({
-                variable1: this.state.variable1 + 1
-            })
-        },
 
-        decrementVariable2(){
+        changeHeader(newGreeting, newSubject){
             this.setState({
-                variable2: this.state.variable2 - 1
+                greeting: newGreeting,
+                subject: newSubject
             })
         }
+
     })
 
 
@@ -180,7 +181,7 @@ We'll adjust our `myState.js` file as follows:
     export const MyProvider = myState.createProvider()
 ```
 
-Notice that we are able to access the `this` keyword within our custom setters. `this` becomes bound to the value of our provider, so we are given access to the state itself through `this.state`. In fact, any value or method that we get when subscribing to the provider is also accessible via the `this` keyword within our custom setters.
+Notice that we are able to access the `this` keyword within our custom setters. `this` becomes bound to the value of our provider, and so `this.setState` will set the global state handed down from that provider. In fact, any value or method that we get when subscribing to the provider is also accessible via the `this` keyword within our custom setters (e.g. `this.state`, `this.setters`. etc.).
 
 We'll now update our subscribing component to use our new custom setters.
 
@@ -195,19 +196,18 @@ We'll now update our subscribing component to use our new custom setters.
 
         return (
             <>
-                <button onClick={setters.incrementVariable1}>
-                    Button 1
+                <h1>{state.greeting}, {state.subject}</h1>
+
+                <button onClick={e => setters.changeHeader("Hi there", "friend")}>
+                    Update header
                 </button>
 
-                <button onClick={setters.decrementVariable2}>
-                    Button 2
-                </button>
             </>
         )
     }
 ```
 
-And with that we have a quick and easy way to implement our own setter logic.
+This is of course a very simple, and not incredibly practical example. But it shows how we can access state and dynamic setters, and create our own setter logic with minimal work. Read on to [Basic Condifuration](#basic-configuration) and [Advanced Configuration](#advanced-configuration) to learn more about these and other features. 
 
 ___
 
