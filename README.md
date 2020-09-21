@@ -24,6 +24,8 @@
     - [Persisting State with Local Storage](#persisting-state-with-local-storage)
     - [Inter-Window Communication through Local Storage](#inter-window-communication-through-local-storage)
 - [Command Line Interface](#command-line-interface)
+    - [File Structure](#file-structure)
+    - [CLI Flags & Options](#cli-flags--options)
 
 
 ___
@@ -759,4 +761,94 @@ const myComponent = () => {
 
 # Command Line Interface
 
-Coming Soon
+A CLI is included with the Cantus Firmus install, and it allows you to quickly create a CF state manager and associated support files (setters, methods, etc.). 
+
+## Package.json Script
+
+The easiest way to execute the CLI script is to add a shortcut to your `package.json` file. 
+
+```
+"scripts": {
+    "cf-cli": "node ./node_modules/cantus-firmus/cli.js"
+}
+```
+
+## File Structure
+
+A CF state manager created through the CLI will save all its files in the following format:
+
+> `NAME` replaced by user defined name for their state manager
+
+```
+src
+|___state
+    |___<NAME>
+        |___<NAME>Provider.js (CF initialization & configuration)
+        |___state.js (required: default state for CF instance)
+        |___setters.js (optional: custom setter definitions)
+        |___methods.js (optional: custom method definitions)
+        |___reducers.js (optional: custom reducer definitions)
+        |___constants.js (optional: constant values) 
+```
+## CLI Flags & Options
+
+> Note: the examples below assume you have setup a `package.json` script like the one shown above. Replace `cf-cli` with your script name, or simply run directly through node. If you are running through a `package.json` script, make sure to include the `--` before any arguments/flags so they get passed to the script.
+
+If you run the cli without any options or flags set, you will be taken to a setup wizard which will walk you through setting up your CF instance. Simply follow the instructions printed to your terminal. 
+
+### Specifying a Name
+
+The first parameter you might set is the name of your state manager.
+
+```
+npm run cf-cli -- --name=main
+```
+
+The above with create a directory called `main` inside your state management directory. With this command, you will still be walked through the setup wizard to select your desired support files. 
+
+### Support File Flags
+
+If you indicate any of the flags below, a support file for that item will be created, and it will automatically be added to your CF instance. 
+
+| Flag | Support File | Description |
+| --- | --- | --- |
+| -s | state.js | Default state | 
+| -c | setters.js | Custom setters |  
+| -m | methods.js | Custom methods | 
+| -r | reducers.js | Custom Reducers | 
+| -k | constants.js | Constants | 
+
+**Example:**
+
+In the example below, a file called `mainProvider.js` will be created for you housing the CF instance configuration, as well as three support files, `state.js`, `setters.js`, and `methods.js`. These will all be saved into a directory called `main`.
+
+```
+npm run cf-cli -- --name=main -scm
+```
+
+### Changing Default Names
+
+If you want to change the name of a support file to be more syntactically correct based on your usage, you can do that by specifying `--<SUPPORT_FILE_NAME>=<DESIRED_NAME>`. If you specify a support file in this way, you do not need to include its flag also.  
+
+Possible support file names are `state`, `setters`, `methods`, `reducers`, and, `constants`
+
+**Example:**
+
+```
+npm run cf-cli -- --name=main -sc --methods=API 
+```
+
+Now, rather than a file named `methods.js`, you will have a file called `API.js`. Note that this only changes the file name, and not the name within your CF instance. If you want the value in your context to also be named `API`, make sure to use the CF instance's `rename` method to do so. 
+
+As the example above shows, you can combine flags and rename files in the same command. The above will have created the following state management resource for you:
+
+```
+src
+|___state
+    |___main
+        |___mainProvider.js
+        |___state.js
+        |___setters.js
+        |___API.js
+```
+
