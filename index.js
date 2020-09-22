@@ -281,7 +281,7 @@ var createStateSetters = function createStateSetters(state) {
       var _loop2 = function _loop2() {
         var nsPath = _step.value;
         nestedName = nsPath.join("_");
-        formattedName = formatStateName(nestedName);
+        formattedName = formatStateName(nestedName, "set");
 
         if (formattedName && !ignoredSetters.includes(nestedName)) {
           setters[formattedName] = /*#__PURE__*/function () {

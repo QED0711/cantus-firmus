@@ -55,7 +55,7 @@ ___
 
 ### Initialization:
 
-The following example shows how to implement a basic configuration of a CantusFirmus state manager context and provider.
+The following example shows how to implement the most basic version of a CantusFirmus state manager context and provider.
 
 First, we create a CF instance, and pass it our default state.
 
@@ -237,7 +237,7 @@ const main = new CantusFirmus(defaultState, options)
 
 export const MainContext = main.context;
 export const MainProvider = main.createProvider();
-}
+
 
 ```
 
@@ -258,10 +258,10 @@ export const MainProvider = main.createProvider();
 | Name | Arguments | Description | 
 | --- | --- | --- |
 | addCustomSetters | Setters Object | The setters object contains custom setter methods that internally call `this.setState`. See [Custom Setters](#custom-setters) for more detail. | 
-| addMethods | Methods Object | The methods object contains custom methods that internally have access to the `this` keyword, and can therefore access the instance state and setters. See [Custom Methods](#custom-methods) for more detail. | 
-| addReducers | Reducers Object | The reducers object contains custom reducer methods. See [Custom Reducers](#custom-reducers) for more detail. |
+| addMethods | Methods Object | The methods object contains custom methods that internally have access to the `this` keyword, and can therefore access the instance state and setters. See [Methods](#methods) for more detail. | 
+| addReducers | Reducers Object | The reducers object contains custom reducer methods. See [Reducers](#reducers) for more detail. |
 | addConstants | Constants Object | The constants object is a standard JS object with properties and methods. As the name indicates, these values are not configurable after initialization. Useful for passing down configuration, styles, or helpers methods in your context. Note that any methods added here will not be bound to the provider component, and therefore will not have access to the `this` keyword to reference state, setters, etc. |  
-| ignoreSetters | [String or [String]] | The `ignoreSetters` method is used in conjunction with dynamically generated setters. You may pass in the name of any state property as a string (top level or nested), and no setter for the property will be created. Note that you may still add a custom setter of the same name and this will be included. If your array contains an array of string, this will be considered the path to a nested value. | 
+| ignoreSetters | [String or [String]] | The `ignoreSetters` method is used in conjunction with dynamically generated setters. You may pass in the name of any state property as a string (top level or nested), and no setter for the property will be created. Note that you may still add a custom setter of the same name and this will be included. If your array contains an array of strings, this will be considered the path to a nested value. | 
 | rename | Name Map Object | The `rename` method allows you to rename any property passed in the instance context. This is typically done for symantec reasons. For example, if you passed in {methods: "API"}, you can now destructure `API` from your context value to reference all your methods. This also adds an internal reference, so you could also access `this.API` from your custom setters, for example. |
 | connectToLocalStorage | Options Obeject | Duplicates local state to the browser's local storage for persistence or for sharing between multiple windows under the same domain. See [ConnectToLocalStorage](#connecttolocalstorage) for more detail. |
 
@@ -318,9 +318,28 @@ setters.setMyValue(addOne)
 
 This will also result in `myValue` being increased by 3. This is slightly more verbose, but does not require that the setter call be wrapped in an async function.
 
+### **Nested Setters**
+
+If you initialize you CF instance with the `{nestedSetters: true}` option, you will get dynamic setters for any nested properties in your state.
+
+```
+const defaultState = {
+    myValue: 0,
+    nested: {
+        value: "Hello"
+    }
+}
+
+const main = new CantusFirmus(defaultState, {nestedSetters: true})
+
+// other initialization steps... 
+```
+
+Now, if you check what setters are available in your setters object, you'll find one named `setNested_value`. Nested setters work the same as any other dynamic setter. Note that the path to the nested property is delimited by an underscore. This is the naming convention for nested setters. 
+
 ### **Custom Setters**
 
-Dynamic setters only allow you to set a single state property at a time. If you desire lower level control over the state change for a specific property, or you want to update multiple state properties with one method, you can add custom setters to achieve these goals. 
+Dynamic setters only allow you to set a single state property at a time, and to the single value that is passed as an argument to the setter. If you desire lower level control over the state change for a specific property, or you want to update multiple state properties with one method, you can add custom setters to achieve these goals. 
 
 Custom setters are just methods that get bound to the provider component, and *typically* internally call `this.setState`. Nothing enforces that custom setters must call `this.setState`, but it is recommended that you maintain this pattern for predictable functionality. 
 
@@ -346,7 +365,7 @@ const customSetters = {
 main.addCustomSetters(customSetters)
 ```
 
-In the above example, we have a state with a `userID` and `username`. When a user logs out, we probably want to clear all user related fields. With the dynamic setters of CF, we could accomplish this in two calls: `setUserID(null)`, and `setUsername(null)`. Since the logout behavior will also change both, it makes more sense to bundle these state operations together. Our custom `logout` setter above does just that, so we now have a convenient, and syntactically correct method to call to logout a user. 
+In the above example, we have a state with a `userID` and `username`. When a user logs out, we probably want to clear all user related fields. With the dynamic setters of CF, we could accomplish this in two calls: `setUserID(null)`, and `setUsername(null)`. Since the logout behavior will always change both, it makes more sense to bundle these state operations together. Our custom `logout` setter above does just that, so we now have a convenient, and syntactically correct setter to call to logout a user. 
 
 Custom setters are accessed in the same way as dynamic setters.
 
@@ -398,6 +417,8 @@ const customSetters = {
     }
 }
 ```
+
+Also of note, `this.setState` returns a promise in CF. One completed, the promise resolves to the newly updated state.
 
 ## Methods
 
@@ -491,7 +512,7 @@ useEffect(() => {
 
 In the above example, inside the `useEffect` callback, we have defined an interval that performs some action every second so long as `myValue` in the state is truthy. Presumably, we would want to be able to change the value of `myValue` to something falsy in some other component, and to have that cancel the interval. Due to the closure, this will not work as `state.myValue` will be set inside the interval callback to whatever its initial value was, and no updates will be read.  
 
-For situations such as these, all CF contexts are initialized with dynamic getter methods by default. As the name implies, these getters serve as wrappers by which to access your state. Just as we get a `setters` object in our context, we also get a `getters` object that is auto populated with getter functions. The syntax is also similar to our setters: if you have a value, `myValue`, you will then have a getter called `getMyValue`. If you require nested getters, you can set `nestedGetters` to `true` in your CF initialization. 
+For situations such as these, all CF contexts are initialized with dynamic getter methods by default. As the name implies, these getters serve as wrappers by which to access your state. Just as we get a `setters` object in our context, we also get a `getters` object that is auto populated with getter functions. The syntax is also similar to our setters: if you have a value, `myValue`, you will then have a getter called `getMyValue`. If you require nested getters, you can set `nestedGetters` to `true` in your CF initialization. Nested getters would then look something like `getNested_value`
 
 We can very easily change the code above to work with one of these dynamic getters. 
 
@@ -586,7 +607,7 @@ const myComponent = () => {
 
 ## Constants
 
-As the name suggests, constants are values passed down in your context that cannot be changes. Constants are useful for providing things like configuration and styles to your subscribed components. 
+As the name suggests, constants are values passed down in your context that cannot be changed. Constants are useful for providing things like configuration and styles to your subscribed components. 
 
 Constants are defined in an object, and are added to your CF instance via the `addConstants` method.
 
@@ -840,7 +861,7 @@ npm run cf-cli -- --name=main -sc --methods=API
 
 Now, rather than a file named `methods.js`, you will have a file called `API.js`. Note that this only changes the file name, and not the name within your CF instance. If you want the value in your context to also be named `API`, make sure to use the CF instance's `rename` method to do so. 
 
-As the example above shows, you can combine flags and rename files in the same command. The above will have created the following state management resource for you:
+As the example above shows, you can combine flags and rename files in the same command. The above will create the following state management resource for you:
 
 ```
 src

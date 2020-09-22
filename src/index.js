@@ -122,7 +122,7 @@ const createStateSetters = (state, ignoredSetters = [], nestedSetters = false, s
         let nestedName;
         for (let nsPath of nestedPaths) {
             nestedName = nsPath.join("_");
-            formattedName = formatStateName(nestedName)
+            formattedName = formatStateName(nestedName, "set")
             if (formattedName && !ignoredSetters.includes(nestedName)) {
                 setters[formattedName] = async function (value) {
                     const newState = nestedSetterFactory(this.state, nsPath)(value) // reassign the nested value and return whole state object;
