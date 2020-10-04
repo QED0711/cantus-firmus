@@ -643,7 +643,7 @@ contextDependencies = [
 
 export const subscribe = (Component, contextDependencies) => {
 
-    CantusFirmusSubscriber = (props) => {
+    const CantusFirmusSubscriber = (props) => {
 
         let contexts = {},
             dependencies = [],

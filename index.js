@@ -886,7 +886,7 @@ contextDependencies = [
 exports["default"] = _default;
 
 var subscribe = function subscribe(Component, contextDependencies) {
-  CantusFirmusSubscriber = function CantusFirmusSubscriber(props) {
+  var CantusFirmusSubscriber = function CantusFirmusSubscriber(props) {
     var contexts = {},
         dependencies = [],
         nestedDep = null; // apply default key value when only 1 context is subscribed to, and no key value given
