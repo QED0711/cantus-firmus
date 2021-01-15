@@ -15,6 +15,14 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
@@ -39,7 +47,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -518,7 +526,8 @@ var CantusFirmus = /*#__PURE__*/function () {
     this.getters = {};
     this.reducers = {};
     this.constants = {};
-    this.methods = {}; // OPTIONS
+    this.methods = {};
+    this.namespacedMethods = {}; // OPTIONS
 
     this.options = _objectSpread(_objectSpread({}, DEFAULT_OPTIONS), options);
     this.dynamicSetters = this.options.dynamicSetters;
@@ -569,6 +578,11 @@ var CantusFirmus = /*#__PURE__*/function () {
       this.methods = methods;
     }
   }, {
+    key: "addNamespacedMethods",
+    value: function addNamespacedMethods(methodsMap) {
+      this.namespacedMethods = methodsMap;
+    }
+  }, {
     key: "rename",
     value: function rename(nameMap) {
       this.renameMap = nameMap || {};
@@ -587,11 +601,12 @@ var CantusFirmus = /*#__PURE__*/function () {
       if (this.storageOptions.initializeFromLocalStorage) {
         if (window.localStorage.getItem(this.storageOptions.name)) this.state = _objectSpread(_objectSpread({}, this.state), JSON.parse(window.localStorage.getItem(this.storageOptions.name)));
       } // if the window is a subscriber window, automatically initialize from local storage
+      // Note that the implementation here is slightly different from the stand initializeFromLocalStorage above because if a state resource is desginated as private, subscriber windows should not initialize default values for those private resources.
 
 
       if (this.storageOptions.subscriberWindows.includes(window.name)) {
         if (window.localStorage.getItem(this.storageOptions.name)) {
-          this.state = _objectSpread(_objectSpread({}, this.state), JSON.parse(window.localStorage.getItem(this.storageOptions.name)));
+          this.state = JSON.parse(window.localStorage.getItem(this.storageOptions.name));
         }
       }
 
@@ -616,6 +631,7 @@ var CantusFirmus = /*#__PURE__*/function () {
       var constants = this.constants;
       var reducers = this.reducers;
       var methods = this.methods;
+      var namespacedMethods = this.namespacedMethods;
       var ignoredSetters = this.ignoredSetters;
       var ignoredGetters = this.ignoredGetters;
       var renameMap = this.renameMap || {};
@@ -679,8 +695,20 @@ var CantusFirmus = /*#__PURE__*/function () {
           _this4.generateDispatchers = _this4.generateDispatchers.bind(_assertThisInitialized(_this4)); // Create reducers that are copies in name of the previously added reducers
           // Then, give a dispatch method to each that will execute the actual reducer
 
-          _this4.reducersWithDispatchers = _this4.generateDispatchers(reducers);
-          _this4.methods = bindMethods(methods, _assertThisInitialized(_this4));
+          _this4.reducersWithDispatchers = _this4.generateDispatchers(reducers); // Bind methods
+
+          _this4.methods = bindMethods(methods, _assertThisInitialized(_this4)); // create and bind namespaced methods
+
+          _this4._boundNamespacedMethods = {};
+
+          for (var _i4 = 0, _Object$entries = Object.entries(namespacedMethods); _i4 < _Object$entries.length; _i4++) {
+            var _Object$entries$_i = _slicedToArray(_Object$entries[_i4], 2),
+                _key = _Object$entries$_i[0],
+                methodGroup = _Object$entries$_i[1];
+
+            _this4._boundNamespacedMethods[_key] = bindMethods(methodGroup, _assertThisInitialized(_this4));
+          }
+
           _this4.bindToLocalStorage = bindToLocalStorage;
           _this4.storageOptions = storageOptions;
           _this4.updateStateFromLocalStorage = _this4.updateStateFromLocalStorage.bind(_assertThisInitialized(_this4)); // Save master version of setState prior to reassignment
@@ -785,8 +813,8 @@ var CantusFirmus = /*#__PURE__*/function () {
 
 
                 if (storageOptions.removeChildrenOnUnload) {
-                  for (var _i4 = 0, _Object$keys4 = Object.keys(this.windows); _i4 < _Object$keys4.length; _i4++) {
-                    var w = _Object$keys4[_i4];
+                  for (var _i5 = 0, _Object$keys4 = Object.keys(this.windows); _i5 < _Object$keys4.length; _i5++) {
+                    var w = _Object$keys4[_i5];
                     this.windows[w].close();
                   }
                 } // return "uncomment to debug unload functionality"
@@ -831,26 +859,27 @@ var CantusFirmus = /*#__PURE__*/function () {
         }, {
           key: "render",
           value: function render() {
-            var value = {
+            var value = _objectSpread({
               state: this.state,
               setters: this.setters,
               getters: this.getters,
               methods: this.methods,
               constants: constants
-            }; // add reducers with dispatchers
+            }, this._boundNamespacedMethods); // add reducers with dispatchers
+
 
             if (Object.keys(reducers).length) value.reducers = this.reducersWithDispatchers; // initialize a window manager if within a multi-window state management system
 
             if (this.bindToLocalStorage) value.windowManager = this.createWindowManager(); // rename value keys to user specifications
 
-            for (var _i5 = 0, _Object$keys5 = Object.keys(renameMap); _i5 < _Object$keys5.length; _i5++) {
-              var _key = _Object$keys5[_i5];
+            for (var _i6 = 0, _Object$keys5 = Object.keys(renameMap); _i6 < _Object$keys5.length; _i6++) {
+              var _key2 = _Object$keys5[_i6];
 
-              if (value[_key]) {
-                value[renameMap[_key]] = value[_key];
-                delete value[_key]; // reassign the value in 'this' for reference in across method types (setters, methods, etc.)
+              if (value[_key2]) {
+                value[renameMap[_key2]] = value[_key2];
+                delete value[_key2]; // reassign the value in 'this' for reference in across method types (setters, methods, etc.)
 
-                this[renameMap[_key]] = this[_key];
+                this[renameMap[_key2]] = this[_key2];
               }
             }
 
@@ -907,9 +936,9 @@ var subscribe = function subscribe(Component, contextDependencies) {
             // allow for nested dependencies
             nestedDep = contexts[ctx.key].state[dep[0]];
 
-            for (var _i6 = 1; _i6 < dep.length; _i6++) {
+            for (var _i7 = 1; _i7 < dep.length; _i7++) {
               // looping from 1 because we have already handled the first step in the nested path
-              nestedDep = nestedDep[dep[_i6]];
+              nestedDep = nestedDep[dep[_i7]];
             }
 
             dependencies.push(nestedDep);
@@ -922,8 +951,8 @@ var subscribe = function subscribe(Component, contextDependencies) {
       }
     }); // add props to dependencies
 
-    for (var _i7 = 0, _Object$keys6 = Object.keys(props); _i7 < _Object$keys6.length; _i7++) {
-      var propKey = _Object$keys6[_i7];
+    for (var _i8 = 0, _Object$keys6 = Object.keys(props); _i8 < _Object$keys6.length; _i8++) {
+      var propKey = _Object$keys6[_i8];
       dependencies.push(props[propKey]);
     }
 
