@@ -326,17 +326,19 @@ class CantusFirmus {
 
         // if user has specified to load state from local storage (this only impacts the provider window)
         if (this.storageOptions.initializeFromLocalStorage) {
-            if (window.localStorage.getItem(this.storageOptions.name)) this.state = JSON.parse(window.localStorage.getItem(this.storageOptions.name))
+            if (window.localStorage.getItem(this.storageOptions.name)) this.state = {
+                ...this.state,
+                ...JSON.parse(window.localStorage.getItem(this.storageOptions.name))
+            }
         }
 
         // if the window is a subscriber window, automatically initialize from local storage
         if (this.storageOptions.subscriberWindows.includes(window.name)) {
             if (window.localStorage.getItem(this.storageOptions.name)) {
-                this.state = JSON.parse(window.localStorage.getItem(this.storageOptions.name))
-                // remove any state paths designated as private (only belonging to the provider window)
-                // for(let path of this.storageOptions.privateStatePaths){
-                //     delete this.state[path]
-                // }
+                this.state = {
+                    ...this.state,
+                    ...JSON.parse(window.localStorage.getItem(this.storageOptions.name))
+                }
             }
         }
 
