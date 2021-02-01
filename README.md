@@ -276,7 +276,7 @@ Dynamic setters are automatically generated functions that can perform state upd
 
 Dynamic setters are turned on by default, and can be turned off by passing `{dynamicSetters: false}` to your CF initialization. 
 
-```customKey
+```
 const defaultState = {
     myValue: 0
 }
