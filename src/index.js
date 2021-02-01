@@ -259,8 +259,9 @@ class CantusFirmus {
         this.setters = {};
         this.getters = {};
         this.reducers = {};
-        this.constants = {}
-        this.methods = {}
+        this.constants = {};
+        this.methods = {};
+        this.namespacedMethods = {};
 
         // OPTIONS
         this.options = { ...DEFAULT_OPTIONS, ...options }
@@ -299,7 +300,6 @@ class CantusFirmus {
 
     addReducers(reducers) {
         this.reducers = reducers
-
     }
 
     addConstants(newConstants) {
@@ -308,6 +308,10 @@ class CantusFirmus {
 
     addMethods(methods) {
         this.methods = methods;
+    }
+
+    addNamespacedMethods(methodsMap){
+        this.namespacedMethods = methodsMap;
     }
 
     rename(nameMap) {
@@ -333,12 +337,10 @@ class CantusFirmus {
         }
 
         // if the window is a subscriber window, automatically initialize from local storage
+        // Note that the implementation here is slightly different from the stand initializeFromLocalStorage above because if a state resource is desginated as private, subscriber windows should not initialize default values for those private resources.
         if (this.storageOptions.subscriberWindows.includes(window.name)) {
             if (window.localStorage.getItem(this.storageOptions.name)) {
-                this.state = {
-                    ...this.state,
-                    ...JSON.parse(window.localStorage.getItem(this.storageOptions.name))
-                }
+                this.state = JSON.parse(window.localStorage.getItem(this.storageOptions.name))                
             }
         }
 
@@ -370,6 +372,7 @@ class CantusFirmus {
         let constants = this.constants
         let reducers = this.reducers
         let methods = this.methods;
+        let namespacedMethods = this.namespacedMethods;
         let ignoredSetters = this.ignoredSetters;
         let ignoredGetters = this.ignoredGetters;
         let renameMap = this.renameMap || {}
@@ -436,7 +439,13 @@ class CantusFirmus {
                 // Then, give a dispatch method to each that will execute the actual reducer
                 this.reducersWithDispatchers = this.generateDispatchers(reducers)
 
+                // Bind methods
                 this.methods = bindMethods(methods, this);
+                // create and bind namespaced methods
+                this._boundNamespacedMethods = {};
+                for(let [key, methodGroup] of Object.entries(namespacedMethods)){
+                    this._boundNamespacedMethods[key] = bindMethods(methodGroup, this)
+                }
 
                 this.bindToLocalStorage = bindToLocalStorage;
                 this.storageOptions = storageOptions;
@@ -597,7 +606,7 @@ class CantusFirmus {
                     getters: this.getters,
                     methods: this.methods,
                     constants,
-
+                    ...this._boundNamespacedMethods, // expand any namespaced methods into the distributed value
                 }
 
                 // add reducers with dispatchers

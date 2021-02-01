@@ -259,6 +259,7 @@ export const MainProvider = main.createProvider();
 | --- | --- | --- |
 | addCustomSetters | Setters Object | The setters object contains custom setter methods that internally call `this.setState`. See [Custom Setters](#custom-setters) for more detail. | 
 | addMethods | Methods Object | The methods object contains custom methods that internally have access to the `this` keyword, and can therefore access the instance state and setters. See [Methods](#methods) for more detail. | 
+| addNamespacedMethods (v0.1.4+) | Namespaced Methods Object | Like `addMethods`, `addNamespacedMethods` allows you to create custom functions that have internal access to the `this` keyword. Rather than providing a single methods object, you provide an object with keys pointing to multiple method objects. See [Namespaced Methods](#namespaced-methods) for more detail. | 
 | addReducers | Reducers Object | The reducers object contains custom reducer methods. See [Reducers](#reducers) for more detail. |
 | addConstants | Constants Object | The constants object is a standard JS object with properties and methods. As the name indicates, these values are not configurable after initialization. Useful for passing down configuration, styles, or helpers methods in your context. Note that any methods added here will not be bound to the provider component, and therefore will not have access to the `this` keyword to reference state, setters, etc. |  
 | ignoreSetters | [String or [String]] | The `ignoreSetters` method is used in conjunction with dynamically generated setters. You may pass in the name of any state property as a string (top level or nested), and no setter for the property will be created. Note that you may still add a custom setter of the same name and this will be included. If your array contains an array of strings, this will be considered the path to a nested value. | 
@@ -452,6 +453,51 @@ const customMethods = {
 }
 ```
 In the above example, we access both `this.state` and `this.setters`. Now, we can simply call `getUserFriends` without having to pass in state or setters and it will automatically call and set our state for us. 
+
+## Namespaced Methods
+
+Namespaced methods allow you to segment your methods based on function by giving them unique names. The resulting method groups in your context value will be identical to the `methods` value described above in that they are simply functions that will have access to the `this` keyword.
+
+For example, if you had a set of methods that accessed some REST API, and another set of methods that derived values from multiple parts of you state, you may want to segment the logic of those two groups so that you are not accessing the `methods` value from your context for both. The `addNamespacedMethods` instance method allows you to do this very easily. 
+
+```
+const main = new CantusFirmus(defaultState)
+
+const methodGroups = {
+    API: {
+        getData(){
+            fetch(url)...
+        }
+    },
+    derivedState: {
+        deriveFullName(){
+            return `${this.firstName} ${this.lastName}`
+        }
+    }
+}
+
+main.addNamespacedMethods(methodGroups);
+```
+
+Now, in your context value, you will have access to `API` and `derivedState` as separate method groups.
+
+```
+const MyComponent = () => {
+    // we can destructure these methods individually making for cleaner, more readable code.
+    const {API, derivedState} = useContext(MainContext);
+
+    // other component setup ...
+
+    return (
+        <>
+            <h1>{derivedState.deriveFullName()}</h1>
+            <button onClick={e => API.getData()}>Call API</button>
+        </>
+    )
+
+}
+```
+
 
 ### **Defining Custom Setters & Methods**
 
