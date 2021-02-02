@@ -87,7 +87,7 @@ First, wrap whichever children components you want to have access to the state c
     import React from 'react';
     import ReactDOM from 'react-dom';
 
-    import { myProvider } from './myState.js'
+    import { MyProvider } from './myState.js'
     ...
 
     ReactDOM.render(
