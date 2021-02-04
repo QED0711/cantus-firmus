@@ -248,6 +248,29 @@ const DEFAULT_STORAGE_OPTIONS = {
     privateStatePaths: []
 }
 
+const PROTECTED_NAMESPACES = [
+    "props",
+    "context",
+    "refs",
+    "updater",
+    "state",
+    "setters",
+    "getters",
+    "reducers",
+    "generateDispatchers",
+    "reducersWithDispatchers",
+    "methods",
+    "_boundNamespacedMethods",
+    "bindToLocalStorage",
+    "storageOptions",
+    "updateStateFromLocalStorage",
+    "setStateMaster",
+    "setState",
+    "_reactInternals",
+    "_reactInternalInstance",
+    "windows"
+]
+
 
 // ========================== CANTUS_FIRMUS CLASS ==========================
 
@@ -443,7 +466,10 @@ class CantusFirmus {
                 this.methods = bindMethods(methods, this);
                 // create and bind namespaced methods
                 this._boundNamespacedMethods = {};
+                
                 for(let [key, methodGroup] of Object.entries(namespacedMethods)){
+                    if(PROTECTED_NAMESPACES.includes(key)) throw new Error(`The namespaced method name, ${key}, is a protected value. Please select a different name.`)
+
                     this._boundNamespacedMethods[key] = bindMethods(methodGroup, this)
                     // add the namespaced values to `this` so they are accessible in other bound functions (setters, other methods)
                     this[key] = this._boundNamespacedMethods[key]
