@@ -445,6 +445,8 @@ class CantusFirmus {
                 this._boundNamespacedMethods = {};
                 for(let [key, methodGroup] of Object.entries(namespacedMethods)){
                     this._boundNamespacedMethods[key] = bindMethods(methodGroup, this)
+                    // add the namespaced values to `this` so they are accessible in other bound functions (setters, other methods)
+                    this[key] = this._boundNamespacedMethods[key]
                 }
 
                 this.bindToLocalStorage = bindToLocalStorage;
