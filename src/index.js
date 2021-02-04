@@ -645,6 +645,9 @@ class CantusFirmus {
 
                 // rename value keys to user specifications
                 for (let key of Object.keys(renameMap)) {
+                    
+                    if(PROTECTED_NAMESPACES.includes(renameMap[key])) throw new Error(`The name, ${renameMap[key]}, was provided in call to '.rename'. ${renameMap[key]} is a protected value and cannot be reassigned. Please select a different name.`)
+                    
                     if (value[key]) {
                         value[renameMap[key]] = value[key];
                         delete value[key];
