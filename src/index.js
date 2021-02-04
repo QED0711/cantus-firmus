@@ -468,7 +468,7 @@ class CantusFirmus {
                 this._boundNamespacedMethods = {};
                 
                 for(let [key, methodGroup] of Object.entries(namespacedMethods)){
-                    if(PROTECTED_NAMESPACES.includes(key)) throw new Error(`The namespaced method name, ${key}, is a protected value. Please select a different name.`)
+                    if(PROTECTED_NAMESPACES.includes(key)) throw new Error(`The namespace, ${key}, was provided as a key in 'addNamespacedMethods'. ${key} is a protected value, and cannot be reassigned. Please select a different name.`)
 
                     this._boundNamespacedMethods[key] = bindMethods(methodGroup, this)
                     // add the namespaced values to `this` so they are accessible in other bound functions (setters, other methods)
