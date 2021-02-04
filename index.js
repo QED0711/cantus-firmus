@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.subscribe = exports["default"] = void 0;
+exports.subscribe = exports.default = void 0;
 
 var _react = _interopRequireWildcard(require("react"));
 
@@ -47,7 +47,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -512,7 +512,8 @@ var DEFAULT_STORAGE_OPTIONS = {
   removeChildrenOnUnload: true,
   clearStorageOnUnload: true,
   privateStatePaths: []
-}; // ========================== CANTUS_FIRMUS CLASS ==========================
+};
+var PROTECTED_NAMESPACES = ["props", "context", "refs", "updater", "state", "setters", "getters", "reducers", "generateDispatchers", "reducersWithDispatchers", "methods", "_boundNamespacedMethods", "bindToLocalStorage", "storageOptions", "updateStateFromLocalStorage", "setStateMaster", "setState", "_reactInternals", "_reactInternalInstance", "windows"]; // ========================== CANTUS_FIRMUS CLASS ==========================
 
 var CantusFirmus = /*#__PURE__*/function () {
   function CantusFirmus(state) {
@@ -706,7 +707,10 @@ var CantusFirmus = /*#__PURE__*/function () {
                 _key = _Object$entries$_i[0],
                 methodGroup = _Object$entries$_i[1];
 
-            _this4._boundNamespacedMethods[_key] = bindMethods(methodGroup, _assertThisInitialized(_this4));
+            if (PROTECTED_NAMESPACES.includes(_key)) throw new Error("The namespace, ".concat(_key, ", was provided as a key in 'addNamespacedMethods'. ").concat(_key, " is a protected value, and cannot be reassigned. Please select a different name."));
+            _this4._boundNamespacedMethods[_key] = bindMethods(methodGroup, _assertThisInitialized(_this4)); // add the namespaced values to `this` so they are accessible in other bound functions (setters, other methods)
+
+            _this4[_key] = _this4._boundNamespacedMethods[_key];
           }
 
           _this4.bindToLocalStorage = bindToLocalStorage;
@@ -874,6 +878,7 @@ var CantusFirmus = /*#__PURE__*/function () {
 
             for (var _i6 = 0, _Object$keys5 = Object.keys(renameMap); _i6 < _Object$keys5.length; _i6++) {
               var _key2 = _Object$keys5[_i6];
+              if (PROTECTED_NAMESPACES.includes(renameMap[_key2])) throw new Error("The name, ".concat(renameMap[_key2], ", was provided in call to '.rename'. ").concat(renameMap[_key2], " is a protected value and cannot be reassigned. Please select a different name."));
 
               if (value[_key2]) {
                 value[renameMap[_key2]] = value[_key2];
@@ -883,7 +888,7 @@ var CantusFirmus = /*#__PURE__*/function () {
               }
             }
 
-            return /*#__PURE__*/_react["default"].createElement(Context.Provider, {
+            return /*#__PURE__*/_react.default.createElement(Context.Provider, {
               value: value
             }, this.props.children);
           }
@@ -909,7 +914,7 @@ contextDependencies = [
 ]
  */
 
-exports["default"] = _default;
+exports.default = _default;
 
 var subscribe = function subscribe(Component, contextDependencies) {
   var CantusFirmusSubscriber = function CantusFirmusSubscriber(props) {
@@ -957,7 +962,7 @@ var subscribe = function subscribe(Component, contextDependencies) {
     }
 
     return (0, _react.useMemo)(function () {
-      return /*#__PURE__*/_react["default"].createElement(Component, _extends({}, props, contexts));
+      return /*#__PURE__*/_react.default.createElement(Component, _extends({}, props, contexts));
     }, dependencies);
   };
 
