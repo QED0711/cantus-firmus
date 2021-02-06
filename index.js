@@ -612,17 +612,7 @@ var CantusFirmus = /*#__PURE__*/function () {
       }
 
       if (!window.name && this.storageOptions.providerWindow) window.name = this.storageOptions.providerWindow;
-    } // _clearStateFromStorage() {
-    //     function handleUnload(e){
-    //         this.storageOptions.name && localStorage.removeItem(this.storageOptions.name)
-    //         if(this.storageOptions.removeChildrenOnUnload){
-    //         }
-    //     }
-    //     handleUnload = handleUnload.bind(this)
-    //     window.onbeforeunload = handleUnload
-    //     window.onunload = handleUnload
-    // }
-
+    }
   }, {
     key: "createProvider",
     value: function createProvider() {
@@ -805,8 +795,29 @@ var CantusFirmus = /*#__PURE__*/function () {
               getChildren: function getChildren() {
                 return this.windows;
               }
-            }; // instruct the window what to do when it closes
+            }; // bind methods to 'this'
+
+            return bindMethods(windowManagerMethods, this);
+          }
+        }, {
+          key: "_getWindows",
+          value: function _getWindows() {
+            return this.windows;
+          }
+        }, {
+          key: "componentDidMount",
+          value: function componentDidMount() {
+            var _this6 = this;
+
+            // When component mounts, if bindToLocalStorage has been set to true, make the window listen for storage change events and update the state 
+            // if the window is already listening for storage events, then do nothing
+            if (bindToLocalStorage) {
+              window.addEventListener("storage", function () {
+                _this6.updateStateFromLocalStorage();
+              });
+            } // instruct the window what to do when it closes
             // we define this here, and not up in the CantusFirmus class because we need access to all generated child windows
+
 
             if (window.name === storageOptions.providerWindow || storageOptions.removeChildrenOnUnload) {
               var handleUnload = function handleUnload(e) {
@@ -817,9 +828,9 @@ var CantusFirmus = /*#__PURE__*/function () {
 
 
                 if (storageOptions.removeChildrenOnUnload) {
-                  for (var _i5 = 0, _Object$keys4 = Object.keys(this.windows); _i5 < _Object$keys4.length; _i5++) {
-                    var w = _Object$keys4[_i5];
-                    this.windows[w].close();
+                  for (var _i5 = 0, _Object$values = Object.values(this._getWindows()); _i5 < _Object$values.length; _i5++) {
+                    var w = _Object$values[_i5];
+                    w.close();
                   }
                 } // return "uncomment to debug unload functionality"
 
@@ -827,26 +838,8 @@ var CantusFirmus = /*#__PURE__*/function () {
 
               handleUnload = handleUnload.bind(this); // set the unload functionality
 
-              window.onbeforeunload = handleUnload;
-              window.onunload = handleUnload;
-            } // bind methods to 'this'
-
-
-            return bindMethods(windowManagerMethods, this);
-          }
-        }, {
-          key: "componentDidMount",
-          value: function componentDidMount() {
-            var _this6 = this;
-
-            // When component mounts, if bindToLocalStorage has been set to true, make the window listen for storage change events and update the state 
-            // if the window is already listening for storage events, then do nothing
-            if (bindToLocalStorage && !window.onstorage) {
-              window.onstorage = function (e) {
-                console.log("ON STORAGE FIRED");
-
-                _this6.updateStateFromLocalStorage();
-              };
+              window.addEventListener("beforeunload", handleUnload);
+              window.addEventListener("unload", handleUnload);
             }
           }
         }, {
@@ -876,8 +869,8 @@ var CantusFirmus = /*#__PURE__*/function () {
 
             if (this.bindToLocalStorage) value.windowManager = this.createWindowManager(); // rename value keys to user specifications
 
-            for (var _i6 = 0, _Object$keys5 = Object.keys(renameMap); _i6 < _Object$keys5.length; _i6++) {
-              var _key2 = _Object$keys5[_i6];
+            for (var _i6 = 0, _Object$keys4 = Object.keys(renameMap); _i6 < _Object$keys4.length; _i6++) {
+              var _key2 = _Object$keys4[_i6];
               if (PROTECTED_NAMESPACES.includes(renameMap[_key2])) throw new Error("The name, ".concat(renameMap[_key2], ", was provided in call to '.rename'. ").concat(renameMap[_key2], " is a protected value and cannot be reassigned. Please select a different name."));
 
               if (value[_key2]) {
@@ -956,8 +949,8 @@ var subscribe = function subscribe(Component, contextDependencies) {
       }
     }); // add props to dependencies
 
-    for (var _i8 = 0, _Object$keys6 = Object.keys(props); _i8 < _Object$keys6.length; _i8++) {
-      var propKey = _Object$keys6[_i8];
+    for (var _i8 = 0, _Object$keys5 = Object.keys(props); _i8 < _Object$keys5.length; _i8++) {
+      var propKey = _Object$keys5[_i8];
       dependencies.push(props[propKey]);
     }
 
