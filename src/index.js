@@ -248,6 +248,29 @@ const DEFAULT_STORAGE_OPTIONS = {
     privateStatePaths: []
 }
 
+const PROTECTED_NAMESPACES = [
+    "props",
+    "context",
+    "refs",
+    "updater",
+    "state",
+    "setters",
+    "getters",
+    "reducers",
+    "generateDispatchers",
+    "reducersWithDispatchers",
+    "methods",
+    "_boundNamespacedMethods",
+    "bindToLocalStorage",
+    "storageOptions",
+    "updateStateFromLocalStorage",
+    "setStateMaster",
+    "setState",
+    "_reactInternals",
+    "_reactInternalInstance",
+    "windows"
+]
+
 
 // ========================== CANTUS_FIRMUS CLASS ==========================
 
@@ -350,21 +373,6 @@ class CantusFirmus {
 
     }
 
-    // _clearStateFromStorage() {
-    //     function handleUnload(e){
-    //         this.storageOptions.name && localStorage.removeItem(this.storageOptions.name)
-    //         if(this.storageOptions.removeChildrenOnUnload){
-
-    //         }
-    //     }
-
-    //     handleUnload = handleUnload.bind(this)
-
-    //     window.onbeforeunload = handleUnload
-    //     window.onunload = handleUnload
-
-    // }
-
     createProvider() {
         // copy instance properties/methods
         const Context = this.context;
@@ -443,8 +451,13 @@ class CantusFirmus {
                 this.methods = bindMethods(methods, this);
                 // create and bind namespaced methods
                 this._boundNamespacedMethods = {};
+                
                 for(let [key, methodGroup] of Object.entries(namespacedMethods)){
+                    if(PROTECTED_NAMESPACES.includes(key)) throw new Error(`The namespace, ${key}, was provided as a key in 'addNamespacedMethods'. ${key} is a protected value, and cannot be reassigned. Please select a different name.`)
+
                     this._boundNamespacedMethods[key] = bindMethods(methodGroup, this)
+                    // add the namespaced values to `this` so they are accessible in other bound functions (setters, other methods)
+                    this[key] = this._boundNamespacedMethods[key]
                 }
 
                 this.bindToLocalStorage = bindToLocalStorage;
@@ -536,14 +549,31 @@ class CantusFirmus {
                     }
                 }
 
+                // bind methods to 'this'
+                return bindMethods(windowManagerMethods, this)
 
+            }
 
+            _getWindows(){
+                return this.windows
+            }
+
+            componentDidMount() {
+                
+                // When component mounts, if bindToLocalStorage has been set to true, make the window listen for storage change events and update the state 
+                // if the window is already listening for storage events, then do nothing
+                if (bindToLocalStorage) {
+                    window.addEventListener("storage", () => {
+                        this.updateStateFromLocalStorage()
+                    })
+                }
 
                 // instruct the window what to do when it closes
                 // we define this here, and not up in the CantusFirmus class because we need access to all generated child windows
                 if (window.name === storageOptions.providerWindow || storageOptions.removeChildrenOnUnload) {
+                    
                     function handleUnload(e) {
-
+                        
                         // clear local storage only if specified by user AND the window being closed is the provider window 
                         if (storageOptions.clearStorageOnUnload && storageOptions.providerWindow === window.name) {
                             localStorage.removeItem(storageOptions.name)
@@ -551,8 +581,8 @@ class CantusFirmus {
 
                         // close all children (and grand children) windows if this functionality has been specified by the user
                         if (storageOptions.removeChildrenOnUnload) {
-                            for (let w of Object.keys(this.windows)) {
-                                this.windows[w].close()
+                            for (let w of Object.values(this._getWindows())) {
+                                w.close()
                             }
                         }
 
@@ -562,26 +592,9 @@ class CantusFirmus {
                     handleUnload = handleUnload.bind(this)
 
                     // set the unload functionality
-                    window.onbeforeunload = handleUnload
-                    window.onunload = handleUnload
-                }
+                    window.addEventListener("beforeunload", handleUnload);
+                    window.addEventListener("unload", handleUnload);
 
-
-
-                // bind methods to 'this'
-                return bindMethods(windowManagerMethods, this)
-
-            }
-
-            componentDidMount() {
-
-                // When component mounts, if bindToLocalStorage has been set to true, make the window listen for storage change events and update the state 
-                // if the window is already listening for storage events, then do nothing
-                if (bindToLocalStorage && !window.onstorage) {
-                    window.onstorage = e => {
-                        console.log("ON STORAGE FIRED")
-                        this.updateStateFromLocalStorage();
-                    }
                 }
             }
 
@@ -617,6 +630,9 @@ class CantusFirmus {
 
                 // rename value keys to user specifications
                 for (let key of Object.keys(renameMap)) {
+                    
+                    if(PROTECTED_NAMESPACES.includes(renameMap[key])) throw new Error(`The name, ${renameMap[key]}, was provided in call to '.rename'. ${renameMap[key]} is a protected value and cannot be reassigned. Please select a different name.`)
+                    
                     if (value[key]) {
                         value[renameMap[key]] = value[key];
                         delete value[key];
