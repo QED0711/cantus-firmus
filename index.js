@@ -679,7 +679,8 @@ var CantusFirmus = /*#__PURE__*/function () {
           _this4 = _super.call(this, props);
           _this4.state = state;
           _this4.setters = bindMethods(setters, _assertThisInitialized(_this4));
-          _this4.getters = bindMethods(getters, _assertThisInitialized(_this4)); // set this.reducers to the reducers added in the CantusFirmus Class 
+          _this4.getters = bindMethods(getters, _assertThisInitialized(_this4));
+          _this4.constants = constants; // set this.reducers to the reducers added in the CantusFirmus Class 
 
           _this4.reducers = reducers; // bind generateDispatchers
 
@@ -861,7 +862,7 @@ var CantusFirmus = /*#__PURE__*/function () {
               setters: this.setters,
               getters: this.getters,
               methods: this.methods,
-              constants: constants
+              constants: this.constants
             }, this._boundNamespacedMethods); // add reducers with dispatchers
 
 
