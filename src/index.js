@@ -438,6 +438,7 @@ class CantusFirmus {
                 this.state = state
                 this.setters = bindMethods(setters, this);
                 this.getters = bindMethods(getters, this);
+                this.constants = constants;
 
                 // set this.reducers to the reducers added in the CantusFirmus Class 
                 this.reducers = reducers
@@ -618,7 +619,7 @@ class CantusFirmus {
                     setters: this.setters,
                     getters: this.getters,
                     methods: this.methods,
-                    constants,
+                    constants: this.constants,
                     ...this._boundNamespacedMethods, // expand any namespaced methods into the distributed value
                 }
 
