@@ -551,6 +551,9 @@ var CantusFirmus = /*#__PURE__*/function () {
   }, {
     key: "ignoreSetters",
     value: function ignoreSetters(settersArr) {
+      settersArr = settersArr.map(function (s) {
+        return Array.isArray(s) ? s.join("_") : s;
+      });
       this.ignoredSetters = settersArr || [];
     }
   }, {
@@ -561,6 +564,9 @@ var CantusFirmus = /*#__PURE__*/function () {
   }, {
     key: "ignoreGetters",
     value: function ignoreGetters(gettersArr) {
+      gettersArr = gettersArr.map(function (g) {
+        return Array.isArray(g) ? g.join("_") : g;
+      });
       this.ignoredGetters = gettersArr || [];
     }
   }, {
