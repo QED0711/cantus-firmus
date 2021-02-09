@@ -310,6 +310,13 @@ class CantusFirmus {
     }
 
     ignoreSetters(settersArr) {
+
+        settersArr = settersArr.map(s => {
+            return Array.isArray(s)
+                ? s.join("_")
+                : s
+        })
+
         this.ignoredSetters = settersArr || []
     }
 
@@ -318,6 +325,13 @@ class CantusFirmus {
     }
 
     ignoreGetters(gettersArr) {
+
+        gettersArr = gettersArr.map(g => {
+            return Array.isArray(g)    
+                ? g.join("_") 
+                : g
+        })
+
         this.ignoredGetters = gettersArr || []
     }
 
