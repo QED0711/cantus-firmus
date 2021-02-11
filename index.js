@@ -754,9 +754,30 @@ var CantusFirmus = /*#__PURE__*/function () {
             var reducersWithDispatchers = {}; // define a dispatcher factory to handle the creation of new dispatchers
 
             var dispatcherFactory = function dispatcherFactory(reducerKey) {
-              return function (state, action) {
-                this.setState(this.reducers[reducerKey](state, action));
-              };
+              return /*#__PURE__*/function () {
+                var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(state, action) {
+                  return regeneratorRuntime.wrap(function _callee6$(_context6) {
+                    while (1) {
+                      switch (_context6.prev = _context6.next) {
+                        case 0:
+                          _context6.next = 2;
+                          return this.setState(this.reducers[reducerKey](state, action));
+
+                        case 2:
+                          return _context6.abrupt("return", _context6.sent);
+
+                        case 3:
+                        case "end":
+                          return _context6.stop();
+                      }
+                    }
+                  }, _callee6, this);
+                }));
+
+                return function (_x6, _x7) {
+                  return _ref6.apply(this, arguments);
+                };
+              }();
             };
 
             var dispatch;

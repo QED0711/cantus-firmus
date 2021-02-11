@@ -514,8 +514,8 @@ class CantusFirmus {
 
                 // define a dispatcher factory to handle the creation of new dispatchers
                 const dispatcherFactory = function (reducerKey) {
-                    return function (state, action) {
-                        this.setState(this.reducers[reducerKey](state, action))
+                    return async function (state, action) {
+                        return await this.setState(this.reducers[reducerKey](state, action))
                     }
                 }
 
