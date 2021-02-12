@@ -1,6 +1,6 @@
 {
   "name": "cantus-firmus",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "A React state management library to handle repetitive and complex tasks",
   "main": "index.js",
   "scripts": {
