@@ -652,6 +652,21 @@ const myComponent = () => {
 
 ```
 
+Like the modified `this.setState`, the generated dispatch function is asynchronous. It returns a promise that resolves to the updated state. So something like the following will work (though it's not necessarily recommended):
+
+```
+const newState = await numReducer.dispatch(state, {
+    type: "UPDATE_NUM_1", 
+    payload: state.num1 + 1
+})
+
+await numReducer.dispatch(newState, {
+    type: "UPDATE_NUM_1",
+    payload: newState.num1 + 1
+})
+
+```
+
 ## Constants
 
 As the name suggests, constants are values passed down in your context that cannot be changed. Constants are useful for providing things like configuration and styles to your subscribed components. 
