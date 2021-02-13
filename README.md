@@ -263,6 +263,7 @@ export const MainProvider = main.createProvider();
 | addReducers | Reducers Object | The reducers object contains custom reducer methods. See [Reducers](#reducers) for more detail. |
 | addConstants | Constants Object | The constants object is a standard JS object with properties and methods. As the name indicates, these values are not configurable after initialization. Useful for passing down configuration, styles, or helpers methods in your context. Note that any methods added here will not be bound to the provider component, and therefore will not have access to the `this` keyword to reference state, setters, etc. |  
 | ignoreSetters | [String or [String]] | The `ignoreSetters` method is used in conjunction with dynamically generated setters. You may pass in the name of any state property as a string (top level or nested), and no setter for the property will be created. Note that you may still add a custom setter of the same name and this will be included. If your array contains an array of strings, this will be considered the path to a nested value. | 
+| ignoreGetters | [String or [String]] | The `ignoreGetters` method is used in conjunction with dynamically generated getters. You may pass in the name of any state property as a string (top level or nested), and no getter method for the property will be created. Note that you may still add a custom getter of the same name and this will be included. If your array contains an array of strings, this will be considered the path to a nested value. | 
 | rename | Name Map Object | The `rename` method allows you to rename any property passed in the instance context. This is typically done for symantec reasons. For example, if you passed in {methods: "API"}, you can now destructure `API` from your context value to reference all your methods. This also adds an internal reference, so you could also access `this.API` from your custom setters, for example. |
 | connectToLocalStorage | Options Obeject | Duplicates local state to the browser's local storage for persistence or for sharing between multiple windows under the same domain. See [ConnectToLocalStorage](#connecttolocalstorage) for more detail. |
 
@@ -648,6 +649,21 @@ const myComponent = () => {
     
     // do other component stuff...
 }
+
+```
+
+Like the modified `this.setState`, the generated dispatch function is asynchronous. It returns a promise that resolves to the updated state. So something like the following will work (though it's not necessarily recommended):
+
+```
+const newState = await numReducer.dispatch(state, {
+    type: "UPDATE_NUM_1", 
+    payload: state.num1 + 1
+})
+
+await numReducer.dispatch(newState, {
+    type: "UPDATE_NUM_1",
+    payload: newState.num1 + 1
+})
 
 ```
 

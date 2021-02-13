@@ -551,6 +551,9 @@ var CantusFirmus = /*#__PURE__*/function () {
   }, {
     key: "ignoreSetters",
     value: function ignoreSetters(settersArr) {
+      settersArr = settersArr.map(function (s) {
+        return Array.isArray(s) ? s.join("_") : s;
+      });
       this.ignoredSetters = settersArr || [];
     }
   }, {
@@ -561,6 +564,9 @@ var CantusFirmus = /*#__PURE__*/function () {
   }, {
     key: "ignoreGetters",
     value: function ignoreGetters(gettersArr) {
+      gettersArr = gettersArr.map(function (g) {
+        return Array.isArray(g) ? g.join("_") : g;
+      });
       this.ignoredGetters = gettersArr || [];
     }
   }, {
@@ -749,7 +755,13 @@ var CantusFirmus = /*#__PURE__*/function () {
 
             var dispatcherFactory = function dispatcherFactory(reducerKey) {
               return function (state, action) {
-                this.setState(this.reducers[reducerKey](state, action));
+                var _this6 = this;
+
+                return new Promise(function (resolve) {
+                  _this6.setStateMaster(_this6.reducers[reducerKey](state, action), function (updatedState) {
+                    return resolve(updatedState);
+                  });
+                });
               };
             };
 
@@ -808,13 +820,13 @@ var CantusFirmus = /*#__PURE__*/function () {
         }, {
           key: "componentDidMount",
           value: function componentDidMount() {
-            var _this6 = this;
+            var _this7 = this;
 
             // When component mounts, if bindToLocalStorage has been set to true, make the window listen for storage change events and update the state 
             // if the window is already listening for storage events, then do nothing
             if (bindToLocalStorage) {
               window.addEventListener("storage", function () {
-                _this6.updateStateFromLocalStorage();
+                _this7.updateStateFromLocalStorage();
               });
             } // instruct the window what to do when it closes
             // we define this here, and not up in the CantusFirmus class because we need access to all generated child windows
