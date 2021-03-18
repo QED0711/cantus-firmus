@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.subscribe = exports.default = void 0;
+exports.subscribe = exports["default"] = void 0;
 
 var _react = _interopRequireWildcard(require("react"));
 
@@ -47,7 +47,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -603,7 +603,16 @@ var CantusFirmus = /*#__PURE__*/function () {
 
       if (!this.storageOptions.name) throw new Error("When connecting your cf instance to the local storage, you must provide an unique name (string) to avoid conflicts with other local storage parameters."); // default the provider window name to the localStorage name if providerWindow param not given
 
-      this.storageOptions.providerWindow = this.storageOptions.providerWindow || this.storageOptions.name; // if user has specified to load state from local storage (this only impacts the provider window)
+      this.storageOptions.providerWindow = this.storageOptions.providerWindow || this.storageOptions.name; // check to see if the window was named from some previous site.
+      // If it was, we should set it to the provider window name.
+      // reason: The windowManager will require a name when creating a subscriber window, and should have a name in the subscriber list. Therefore, if the window has a name but it is not a subscriber window, we can assume it came from an external site and should be overwritten to match the provider window status. 
+
+      if (window.name && !this.storageOptions.subscriberWindows.includes(window.name) && window.name !== this.storageOptions.providerWindow) {
+        window.name = this.storageOptions.providerWindow;
+      } // windows doesn't have a name, it should also be initialized to the provider window
+
+
+      if (!window.name && this.storageOptions.providerWindow) window.name = this.storageOptions.providerWindow; // if user has specified to load state from local storage (this only impacts the provider window)
 
       if (this.storageOptions.initializeFromLocalStorage) {
         if (window.localStorage.getItem(this.storageOptions.name)) this.state = _objectSpread(_objectSpread({}, this.state), JSON.parse(window.localStorage.getItem(this.storageOptions.name)));
@@ -616,8 +625,6 @@ var CantusFirmus = /*#__PURE__*/function () {
           this.state = JSON.parse(window.localStorage.getItem(this.storageOptions.name));
         }
       }
-
-      if (!window.name && this.storageOptions.providerWindow) window.name = this.storageOptions.providerWindow;
     }
   }, {
     key: "createProvider",
@@ -796,6 +803,7 @@ var CantusFirmus = /*#__PURE__*/function () {
             var windowManagerMethods = {
               open: function open(url, name) {
                 var params = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+                if (!url || !name) throw new Error("windowManager.open requires two arguments: (url, name). Any names passed in must also be included in the subscriberWindows array in the `connectToLocalStorage` settings.");
                 this.windows[name] = window.open(url, name, createParamsString(params));
               },
               close: function close(name) {
@@ -894,7 +902,7 @@ var CantusFirmus = /*#__PURE__*/function () {
               }
             }
 
-            return /*#__PURE__*/_react.default.createElement(Context.Provider, {
+            return /*#__PURE__*/_react["default"].createElement(Context.Provider, {
               value: value
             }, this.props.children);
           }
@@ -920,7 +928,7 @@ contextDependencies = [
 ]
  */
 
-exports.default = _default;
+exports["default"] = _default;
 
 var subscribe = function subscribe(Component, contextDependencies) {
   var CantusFirmusSubscriber = function CantusFirmusSubscriber(props) {
@@ -968,7 +976,7 @@ var subscribe = function subscribe(Component, contextDependencies) {
     }
 
     return (0, _react.useMemo)(function () {
-      return /*#__PURE__*/_react.default.createElement(Component, _extends({}, props, contexts));
+      return /*#__PURE__*/_react["default"].createElement(Component, _extends({}, props, contexts));
     }, dependencies);
   };
 
