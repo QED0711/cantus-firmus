@@ -365,6 +365,16 @@ class CantusFirmus {
         // default the provider window name to the localStorage name if providerWindow param not given
         this.storageOptions.providerWindow = this.storageOptions.providerWindow || this.storageOptions.name
 
+        // check to see if the window was named from some previous site.
+        // If it was, we should set it to the provider window name.
+            // reason: The windowManager will require a name when creating a subscriber window, and should have a name in the subscriber list. Therefore, if the window has a name but it is not a subscriber window, we can assume it came from an external site and should be overwritten to match the provider window status. 
+        if(window.name && !this.storageOptions.subscriberWindows.includes(window.name) && window.name !== this.storageOptions.providerWindow){
+            window.name = this.storageOptions.providerWindow;
+        }
+
+        // windows doesn't have a name, it should also be initialized to the provider window
+        if (!window.name && this.storageOptions.providerWindow) window.name = this.storageOptions.providerWindow
+
         // if user has specified to load state from local storage (this only impacts the provider window)
         if (this.storageOptions.initializeFromLocalStorage) {
             if (window.localStorage.getItem(this.storageOptions.name)) this.state = {
@@ -381,7 +391,6 @@ class CantusFirmus {
             }
         }
 
-        if (!window.name && this.storageOptions.providerWindow) window.name = this.storageOptions.providerWindow
 
 
 
@@ -553,6 +562,7 @@ class CantusFirmus {
                 // window manager methods passed to user
                 const windowManagerMethods = {
                     open(url, name, params = {}) {
+                        if(!url || !name) throw new Error("windowManager.open requires two arguments: (url, name). Any names passed in must also be included in the subscriberWindows array in the `connectToLocalStorage` settings.")
                         this.windows[name] = window.open(url, name, createParamsString(params))
                     },
                     close(name) {
