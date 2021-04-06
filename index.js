@@ -689,8 +689,23 @@ var CantusFirmus = /*#__PURE__*/function () {
 
           _classCallCheck(this, Provider);
 
-          _this4 = _super.call(this, props);
-          _this4.state = state;
+          _this4 = _super.call(this, props); // setup state depending on where it is coming from (previously defined state or local storage)
+
+          if (storageOptions.initializeFromLocalStorage) {
+            if (!!localStorage[storageOptions.name]) {
+              try {
+                _this4.state = _objectSpread(_objectSpread({}, state), JSON.parse(localStorage.getItem(storageOptions.name)));
+              } catch (err) {
+                _this4.state = state;
+              }
+            } else {
+              _this4.state = state;
+            }
+          } else {
+            _this4.state = state;
+          } // this.state = state
+
+
           _this4.setters = bindMethods(setters, _assertThisInitialized(_this4));
           _this4.getters = bindMethods(getters, _assertThisInitialized(_this4));
           _this4.constants = constants; // set this.reducers to the reducers added in the CantusFirmus Class 
