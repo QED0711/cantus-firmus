@@ -458,7 +458,23 @@ class CantusFirmus {
         class Provider extends PureComponent {
             constructor(props) {
                 super(props);
-                this.state = state
+
+                // setup state depending on where it is coming from (previously defined state or local storage)
+                if(storageOptions.initializeFromLocalStorage){
+                    if(!!localStorage[storageOptions.name]) {
+                        try{
+                            this.state = {...state, ...JSON.parse(localStorage.getItem(storageOptions.name))}
+                        } catch(err){
+                            this.state = state
+                        }
+                    } else {
+                        this.state = state
+                    }
+                } else {
+                    this.state = state;
+                }
+
+                // this.state = state
                 this.setters = bindMethods(setters, this);
                 this.getters = bindMethods(getters, this);
                 this.constants = constants;
